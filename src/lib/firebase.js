@@ -1,21 +1,26 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
 import { getAuth } from 'firebase/auth';
+require('dotenv').config();
 
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+
+
 const firebaseConfig = {
-  apiKey: "AIzaSyDXJarPccaQLNpm711Jss1o2938KlSD_5k",
-  authDomain: "capstoneg10-31f40.firebaseapp.com",
-  projectId: "capstoneg10-31f40",
-  storageBucket: "capstoneg10-31f40.appspot.com",
-  messagingSenderId: "365702827260",
-  appId: "1:365702827260:web:c8adcc4672212889c5db79",
-  measurementId: "G-5L1WV7BZCD"
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PRODUCT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
+
+console.log("Firebase Config: ", firebaseConfig);
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
