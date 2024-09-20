@@ -3,7 +3,8 @@ import { auth } from "../lib/firebase";
 
 require('dotenv').config();
 
-const API_ENDPOINT = process.env.API_ENDPOINT || 'http://localhost:8000/graphql';
+const API_ENDPOINT = process.env.API_ENDPOINT;
+console.log("API Endpoint: ", API_ENDPOINT);
 
 
 // Define a function to fetch GraphQL data, including the token
