@@ -113,7 +113,7 @@ export default function page() {
               Don't have an account yet?
               <Link
                 className="text-blue-600 decoration-2 hover:underline focus:outline-none focus:underline font-medium dark:text-blue-500"
-                href="/signup"
+                href="/user/signup"
               >
                 Sign up here
               </Link>
@@ -169,7 +169,7 @@ export default function page() {
                       Password
                     </label>
                     
-                    <Link href="/forgot-password"
+                    <Link href="/user/forgot-password"
                       className="inline-flex items-center gap-x-1 text-sm text-blue-600 decoration-2 hover:underline focus:outline-none focus:underline font-medium dark:text-blue-500"
   
                     >
