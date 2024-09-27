@@ -1,16 +1,14 @@
-"use client";
-import { UserAuth } from "@/context/AuthContext";
+'use client';
+
+import { useRouter } from 'nextjs-toploader/app';
+import { useEffect } from 'react';
 
 export default function Home() {
+  const router = useRouter();
 
-  const { user } = UserAuth();
+  useEffect(() => {
+    router.push('/user');
+  }, [router]);
 
-  console.log("User: ", user);
-
-  return (
-    <div className="flex items-center justify-center min-h-screen">
-      Welcome,
-      {user ? user.displayName : "Not logged in"}
-     </div>
-  );
+  return null; // You can return null or a loading component while redirecting
 }

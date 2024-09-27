@@ -45,7 +45,7 @@ export default function Page() {
               Remember your password?
               <Link
                 className="text-blue-600 decoration-2 hover:underline focus:outline-none focus:underline font-medium dark:text-blue-500"
-                href="/login"
+                href="/user/login"
               >
                 Sign in here
               </Link>
