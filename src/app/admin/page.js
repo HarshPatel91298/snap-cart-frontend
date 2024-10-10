@@ -11,5 +11,5 @@ export default function AdminHome() {
       Admin Dashboard,
       {user ? user.displayName : 'Please log in to access the admin dashboard.'}
     </div>
-  )
+  );
 }

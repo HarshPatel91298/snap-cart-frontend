@@ -1,27 +1,28 @@
-'use client'
-import { UserAuth } from '@/context/AuthContext'
+
+'use client';
+import { UserAuth } from "@/context/AuthContext";
 // import { useRouter } from 'next/navigation'
-import { useRouter } from 'nextjs-toploader/app'
+import { useRouter } from 'nextjs-toploader/app';
 import Link from 'next/link'
 
 export default function NavBar() {
-  const router = useRouter()
-  const { user, googleSignIn, logout } = UserAuth()
+  const router = useRouter();
+  const { user, googleSignIn, logout } = UserAuth();
 
   const handleSignOut = async () => {
     try {
-      await logout()
-      router.push('/')
+      await logout();
+      router.push('/');
     } catch (error) {
-      console.log(error)
+      console.log(error);
     }
   }
 
   const handleSingIn = async () => {
     try {
-      await googleSignIn()
+      await googleSignIn();
     } catch (error) {
-      console.log(error)
+      console.log(error);
     }
   }
 
@@ -65,6 +66,7 @@ export default function NavBar() {
               </>
             )}
 
+
             {/* <button
               type="button"
               className="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-xl border border-transparent bg-lime-400 text-black hover:bg-lime-500 focus:outline-none focus:bg-lime-500 transition disabled:opacity-50 disabled:pointer-events-none"
@@ -98,7 +100,9 @@ export default function NavBar() {
                   <line x1={3} x2={21} y1={18} y2={18} />
                 </svg>
                 <svg
+
                   className="hs-collapse-open:block shrink-0 hidden size-4"
+
                   xmlns="http://www.w3.org/2000/svg"
                   width={24}
                   height={24}
@@ -126,8 +130,7 @@ export default function NavBar() {
           >
             <div className="flex flex-col gap-y-4 gap-x-0 mt-5 md:flex-row md:justify-center md:items-center md:gap-y-0 md:gap-x-7 md:mt-0">
               <div>
-                <Link
-                  href="/user"
+                <Link href="/user"
                   className="relative inline-block text-black focus:outline-none before:absolute before:bottom-0.5 before:start-0 before:-z-[1] before:w-full before:h-1 before:bg-lime-400 dark:text-white"
                   aria-current="page"
                 >
@@ -135,8 +138,10 @@ export default function NavBar() {
                 </Link>
               </div>
               <div>
-                <Link
-                  href="/user/shop"
+
+                <Link href="/user/shop"
+
+
                   className="inline-block text-black hover:text-gray-600 focus:outline-none focus:text-gray-600 dark:text-white dark:hover:text-neutral-300 dark:focus:text-neutral-300"
                 >
                   Shop
@@ -173,5 +178,6 @@ export default function NavBar() {
       </header>
       {/* ========== END HEADER ========== */}
     </>
-  )
+
+  );
 }

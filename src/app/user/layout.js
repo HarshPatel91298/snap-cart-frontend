@@ -9,6 +9,7 @@ import Footer from './components/Footer'
 
 const NextTopLoader = dynamic(() => import('nextjs-toploader'), { ssr: false })
 
+
 export default function UserLayout({ children }) {
   return (
     <AuthContextProvider>

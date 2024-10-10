@@ -36,3 +36,4 @@ const CategoriesSidebar = () => (
 )
 
 export default CategoriesSidebar
+
