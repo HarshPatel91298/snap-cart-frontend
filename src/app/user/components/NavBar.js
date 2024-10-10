@@ -1,3 +1,4 @@
+
 'use client';
 import { UserAuth } from "@/context/AuthContext";
 // import { useRouter } from 'next/navigation'
@@ -16,7 +17,6 @@ export default function NavBar() {
       console.log(error);
     }
   }
-
 
   const handleSingIn = async () => {
     try {
@@ -38,23 +38,20 @@ export default function NavBar() {
           </div>
           {/* Button Group */}
           <div className="flex items-center gap-x-1 md:gap-x-2 ms-auto py-1 md:ps-6 md:order-3 md:col-span-3">
-
             {/* Logout  */}
 
-            {(user) ? (
+            {user ? (
               <button
                 onClick={user ? handleSignOut : handleSingIn}
                 type="button"
                 className="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-xl bg-white border border-gray-200 text-black hover:bg-gray-100 focus:outline-none focus:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:hover:bg-white/10 dark:text-white dark:hover:text-white dark:focus:text-white"
               >
-                {user ? "Logout" : "Login"}
+                {user ? 'Logout' : 'Login'}
               </button>
             ) : (
               <>
                 <Link href="/user/login">
-                  <button
-                    className="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-xl bg-white border border-gray-200 text-black hover:bg-gray-100 focus:outline-none focus:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:hover:bg-white/10 dark:text-white dark:hover:text-white dark:focus:text-white"
-                  >
+                  <button className="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-xl bg-white border border-gray-200 text-black hover:bg-gray-100 focus:outline-none focus:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:hover:bg-white/10 dark:text-white dark:hover:text-white dark:focus:text-white">
                     Login
                   </button>
                 </Link>
@@ -79,15 +76,15 @@ export default function NavBar() {
             <div className="md:hidden">
               <button
                 type="button"
-                className="hs-collapse-toggle size-[38px] flex justify-center items-center text-sm font-semibold rounded-xl border border-gray-200 text-black hover:bg-gray-100 focus:outline-none focus:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none dark:text-white dark:border-neutral-700 dark:hover:bg-neutral-700 dark:focus:bg-neutral-700"
-                id="hs-navbar-hcail-collapse"
+                className="hs-collapse-toggle md:hidden relative size-9 flex justify-center items-center font-medium text-[12px] rounded-lg border border-gray-200 text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none dark:text-white dark:border-neutral-700 dark:hover:bg-neutral-700 dark:focus:bg-neutral-700"
+                id="hs-header-base-collapse"
                 aria-expanded="false"
-                aria-controls="hs-navbar-hcail"
+                aria-controls="hs-header-base"
                 aria-label="Toggle navigation"
-                data-hs-collapse="#hs-navbar-hcail"
+                data-hs-collapse="#hs-header-base"
               >
                 <svg
-                  className="hs-collapse-open:hidden shrink-0 size-4"
+                  className="hs-collapse-open:hidden size-4"
                   xmlns="http://www.w3.org/2000/svg"
                   width={24}
                   height={24}
@@ -103,7 +100,9 @@ export default function NavBar() {
                   <line x1={3} x2={21} y1={18} y2={18} />
                 </svg>
                 <svg
-                  className="hs-collapse-open:block hidden shrink-0 size-4"
+
+                  className="hs-collapse-open:block shrink-0 hidden size-4"
+
                   xmlns="http://www.w3.org/2000/svg"
                   width={24}
                   height={24}
@@ -117,7 +116,9 @@ export default function NavBar() {
                   <path d="M18 6 6 18" />
                   <path d="m6 6 12 12" />
                 </svg>
+                <span className="sr-only">Toggle navigation</span>
               </button>
+              {/* End Collapse Button */}
             </div>
           </div>
           {/* End Button Group */}
@@ -137,7 +138,9 @@ export default function NavBar() {
                 </Link>
               </div>
               <div>
+
                 <Link href="/user/shop"
+
 
                   className="inline-block text-black hover:text-gray-600 focus:outline-none focus:text-gray-600 dark:text-white dark:hover:text-neutral-300 dark:focus:text-neutral-300"
                 >
@@ -175,5 +178,6 @@ export default function NavBar() {
       </header>
       {/* ========== END HEADER ========== */}
     </>
+
   );
 }
