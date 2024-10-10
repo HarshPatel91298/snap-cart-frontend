@@ -1,12 +1,19 @@
 /* eslint-disable @next/next/no-img-element */
 import React from 'react'
+import ProductCarousel from './ProductCarousel' // Ensure this is the correct path
+import data from '@/utils/data' // Assuming you are using 'data' for products
 
-export default function ProductGrid({ products }) {
+export default function ShopPage() {
   return (
     <div className="container mx-auto px-4">
-      <h2 className="text-2xl font-bold my-6 text-black">Special Offer</h2>
+      {/* Product Carousel */}
+      <h2 className="text-2xl font-bold my-6 text-black">Featured Products</h2>
+      <ProductCarousel products={data.products} />
+
+      {/* Product Grid */}
+      <h2 className="text-2xl font-bold my-6 text-black">Shop All Products</h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {products.map((product) => (
+        {data.products.map((product) => (
           <div key={product.slug} className="bg-white p-4 rounded-lg shadow">
             <img
               src={product.image}
