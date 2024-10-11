@@ -1,5 +1,5 @@
 "use client";
-import { UserAuth } from "@/context/AuthContext";
+import { UserAuth } from "../../../context/AuthContext";
 import { useState, useEffect } from "react";
 // import { useRouter } from 'next/navigation'
 import { useRouter } from 'nextjs-toploader/app';

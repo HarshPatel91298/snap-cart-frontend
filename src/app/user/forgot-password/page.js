@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { UserAuth } from "@/context/AuthContext";
+import { UserAuth } from "../../../context/AuthContext";
 import { useState } from "react";
 import { useRouter } from 'nextjs-toploader/app';
 
