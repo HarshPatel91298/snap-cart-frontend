@@ -1,7 +1,7 @@
 // src/app/admin/page.js
 
 "use client";
-import { UserAuth } from "@/context/AuthContext";
+import { UserAuth } from "../../context/AuthContext";
 
 export default function AdminHome() {
   const { user } = UserAuth();

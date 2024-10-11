@@ -1,5 +1,5 @@
 import React from 'react'
-import data from '@/utils/data' // Replace with your data source
+import data from '../../../utils/data' // Replace with your data source
 import ProductItem from './ProductItem' // This would be your product component
 
 export default function ProductGrid() {

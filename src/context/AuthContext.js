@@ -6,13 +6,16 @@ import {
   signOut,
   onAuthStateChanged,
   updateProfile,
+  updateEmail,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   sendPasswordResetEmail,
-  sendEmailVerification
+  sendEmailVerification,
+  EmailAuthProvider,
+  reauthenticateWithCredential,
 } from "firebase/auth";
 import { auth } from "../lib/firebase";
-import { fetchGraphQLData } from '@/lib/graphqlClient';
+import { fetchGraphQLData } from '../lib/graphqlClient';
 
 
 
@@ -30,7 +33,7 @@ export const AuthContextProvider = ({ children }) => {
 
       // Create a new user in the database
       await createUser(user);
-
+      
       // Set the user state
       setUser(user);
 
@@ -84,6 +87,94 @@ export const AuthContextProvider = ({ children }) => {
     }
   };
 
+  const promptForCredentials = (email) => {
+    const password = window.prompt(`Please enter your password to update the email for ${email}`);
+    return { email, password };
+  };
+  
+  const updateUserProfile = async (user, fullname, email, phoneNumber) => {
+    try {
+      console.log("User: ", user);
+      console.log("Fullname: ", fullname);
+      console.log("Email: ", email);
+      console.log("Phone: ", phoneNumber);
+  
+      const isEmailChanged = user.email !== email;
+      console.log("Is email changed: ", isEmailChanged);
+  
+      // Update display name
+      await updateProfile(user, { displayName: fullname });
+      console.log("Profile updated successfully");
+  
+      // Check if email is different
+     
+      // Update user details in the database
+      await updateUser({
+        uid: user.uid,
+        displayName: fullname,
+        phoneNumber: phoneNumber,
+      });
+  
+      return { success: true, message: "User profile updated successfully!" };
+    } catch (error) {
+      console.error("Error during profile update:", error);
+      return { success: false, message: `Profile update failed: ${error.message}` };
+    }
+  };
+
+  // Update the user's data in the database
+  const updateUser = async (user) => {
+    const query = `
+      mutation UpdateUser($uid: String!, $userData: UpdateUserInput!) {
+        updateUser(uid: $uid, userData: $userData) {
+          data {
+            email
+            displayName
+            firebaseUID
+            emailVerified
+            phoneNumber
+            
+          }
+          message
+        }
+      }
+    `;
+
+    const userData = {};
+    if (user.displayName) {
+      userData.displayName = user.displayName;
+    }
+    if (user.phoneNumber) {
+      userData.phoneNumber = user.phoneNumber;
+    }
+    if (user.email) {
+      userData.email = user.email;
+    }
+    if (user.emailVerified) {
+      userData.emailVerified = user.emailVerified;
+    }
+  
+    const variables = {
+      uid: user.uid, // Use the correct UID for the user
+      userData: userData,
+    };
+  
+    try {
+      const response = await fetchGraphQLData(query, variables);
+      console.log('GraphQL response [updateUser]:', response);
+      if (response.updateUser.data) {
+        return { success: true, message: "User updated in the database successfully!" };
+      }
+      return { success: false, message: response.updateUser.message };
+    }
+    catch (error) {
+      console.error('GraphQL Error:', error);
+      return { success: false, message: `Failed to update user in database: ${error.message}` };
+    }
+  };
+  
+
+
   // Create a new user in the database
   const createUser = async (user) => {
     const query = `
@@ -122,7 +213,10 @@ export const AuthContextProvider = ({ children }) => {
       },
     };
 
+    
+
     try {
+     
       const response = await fetchGraphQLData(query, variables);
 
       console.log("Response: ", response);
@@ -227,7 +321,7 @@ export const AuthContextProvider = ({ children }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, googleSignIn, emailandPasswordSignUp, emailandPasswordSignIn, logout, resetPassword, getUserByEmail, sendEmailValidation }}>
+    <AuthContext.Provider value={{ user, googleSignIn, emailandPasswordSignUp, emailandPasswordSignIn, logout, resetPassword, getUserByEmail, sendEmailValidation, updateUserProfile }}>
       {children}
     </AuthContext.Provider>
   );
