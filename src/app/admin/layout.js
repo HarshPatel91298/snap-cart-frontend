@@ -1,4 +1,4 @@
-"use client";
+'use client'
 
 import { AuthContextProvider } from "../../context/AuthContext";
 import PrelineScript from "../../components/PrelineScript";
@@ -19,5 +19,6 @@ export default function AdminLayout({ children }) {
       <PrelineScript />
       <NextTopLoader />
     </AuthContextProvider>
+
   );
 }

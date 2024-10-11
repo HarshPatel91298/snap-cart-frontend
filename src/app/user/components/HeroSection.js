@@ -20,7 +20,7 @@ export default function HeroSection() {
 
           <Link href="/shop">
             <button className="bg-black text-white px-6 py-2 mt-4 rounded-lg hover:bg-gray-800">
-              Show Now
+              Shop Now
             </button>
           </Link>
         </div>
