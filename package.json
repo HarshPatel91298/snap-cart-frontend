@@ -6,10 +6,12 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "clean": "rm -rf dist node_modules"
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^6.6.0",
+    "@next/swc-darwin-arm64": "^15.0.2",
     "@tabler/icons-react": "^3.19.0",
     "clsx": "^2.1.1",
     "dotenv": "^16.4.5",
