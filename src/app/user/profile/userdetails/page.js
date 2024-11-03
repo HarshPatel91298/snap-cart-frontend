@@ -2,7 +2,6 @@
 import React, { useEffect, useState } from 'react';
 import { UserAuth } from "../../../../context/AuthContext";
 import '@fortawesome/fontawesome-free/css/all.min.css';
-import AddressManager from '../../components/AddressManager';
 import ProfileSidebar from '../../components/ProfileSidebar';
 
 const UserProfile = () => {
