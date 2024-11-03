@@ -13,11 +13,12 @@ export default function AdminLayout({ children }) {
 
 
   return (
-    <AuthContextProvider>
+    <div>
         {children}
       <PrelineScript />
-      <NextTopLoader />xxx
-    </AuthContextProvider>
+      <NextTopLoader />
+      </div>
+    
 
   );
 }

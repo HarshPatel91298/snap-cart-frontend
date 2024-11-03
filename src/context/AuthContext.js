@@ -17,8 +17,6 @@ import {
 import { auth } from "../lib/firebase";
 import { fetchGraphQLData } from '../lib/graphqlClient';
 
-
-
 // Create AuthContext
 const AuthContext = createContext();
 

@@ -12,7 +12,7 @@ const NextTopLoader = dynamic(() => import('nextjs-toploader'), { ssr: false })
 
 export default function UserLayout({ children }) {
   return (
-    <AuthContextProvider>
+    <div>
       <NavBar />
       <div className="flex flex-col items-center justify-center min-h-screen">
         {children}
@@ -20,7 +20,7 @@ export default function UserLayout({ children }) {
       <Footer />
       <PrelineScript />
       <NextTopLoader />
-    </AuthContextProvider>
+    </div>
   );
 }
 

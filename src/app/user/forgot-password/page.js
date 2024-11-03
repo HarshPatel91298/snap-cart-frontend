@@ -27,7 +27,7 @@ export default function Page() {
 
     try {
       await resetPassword(email);
-      router.push('/login');
+      router.push('/user/login');
     } catch (err) {
       setError("Error resetting password. Please try again.");
     }
