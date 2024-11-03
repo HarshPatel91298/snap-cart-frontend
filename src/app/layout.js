@@ -1,4 +1,6 @@
 import "./globals.css";
+import '../styles/style.css';
+
 
 export const metadata = {
   title: "SnapCart",

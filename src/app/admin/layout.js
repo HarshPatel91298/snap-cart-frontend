@@ -1,25 +1,19 @@
-'use client'
+"use client";
 
-import { AuthContextProvider } from '@/context/AuthContext'
-import PrelineScript from '@/components/PrelineScript'
-import MenuBar from './components/MenuBar'
-import dynamic from 'next/dynamic'
-import NavBar from './components/NavBar'
-import Footer from './components/Footer'
+import { AuthContextProvider } from "../../context/AuthContext";
+import PrelineScript from "../../components/PrelineScript";
+import dynamic from "next/dynamic";
 
-const NextTopLoader = dynamic(() => import('nextjs-toploader'), { ssr: false })
-
+const NextTopLoader = dynamic(() => import("nextjs-toploader"), { ssr: false });
 
 export default function AdminLayout({ children }) {
+  console.log(children);
+
   return (
     <AuthContextProvider>
-      {/* <NavBar /> */}
-      <MenuBar />
       {children}
-      <Footer />
       <PrelineScript />
       <NextTopLoader />
     </AuthContextProvider>
-
   );
 }

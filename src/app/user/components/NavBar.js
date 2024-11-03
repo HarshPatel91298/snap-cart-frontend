@@ -1,6 +1,6 @@
 
 'use client';
-import { UserAuth } from "@/context/AuthContext";
+import { UserAuth } from "../../../context/AuthContext";
 // import { useRouter } from 'next/navigation'
 import { useRouter } from 'nextjs-toploader/app';
 import Link from 'next/link'
@@ -26,6 +26,7 @@ export default function NavBar() {
     }
   }
 
+
   return (
     <>
       {/* ========== HEADER ========== */}
@@ -40,14 +41,29 @@ export default function NavBar() {
           <div className="flex items-center gap-x-1 md:gap-x-2 ms-auto py-1 md:ps-6 md:order-3 md:col-span-3">
             {/* Logout  */}
 
-            {user ? (
+            {(user) ? (
+              // Add Profile Icon
+              <>
+              <div className="relative">
+              <Link href="/user/profile">
+                <button type="button" className="flex items-center gap-x-2 text-sm font-medium rounded-xl bg-white border border-gray-200 text-black hover:bg-gray-100 focus:outline-none focus:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:hover:bg-white/10 dark:text-white dark:hover:text-white dark:focus:text-white">
+                  {user.photoURL ? (
+                    <img className="w-8 h-8 rounded-full" src={user.photoURL} alt="User" />
+                  ) : (
+                    <img className="w-8 h-8 rounded-full" src="/images/male_user_8080.png" alt="User" />
+                  )}
+                </button>
+              </Link>
+              </div>
               <button
-                onClick={user ? handleSignOut : handleSingIn}
+                onClick={handleSignOut}
                 type="button"
                 className="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-xl bg-white border border-gray-200 text-black hover:bg-gray-100 focus:outline-none focus:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:hover:bg-white/10 dark:text-white dark:hover:text-white dark:focus:text-white"
               >
-                {user ? 'Logout' : 'Login'}
+                {"Logout"}
               </button>
+              </>
+
             ) : (
               <>
                 <Link href="/user/login">
