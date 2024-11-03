@@ -29,6 +29,20 @@ export function SidebarDemo({ children }) {
       ),
     },
     {
+      label: "Stock Locations",
+      href: "/admin/stock-location",
+      icon: (
+        <IconUserBolt className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
+      ),
+    },
+    {
+      label: "Stock Management",
+      href: "/admin/stock-management",
+      icon: (
+        <IconUserBolt className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
+      ),
+    },
+    {
       label: "Settings",
       href: "#",
       icon: (
