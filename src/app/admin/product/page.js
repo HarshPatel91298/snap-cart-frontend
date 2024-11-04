@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { fetchGraphQLData } from '../../../lib/graphqlClient'; // Ensure this path is correct
 
+
 // GraphQL Queries and Mutations
 const GET_PRODUCTS = `
   query Products {
