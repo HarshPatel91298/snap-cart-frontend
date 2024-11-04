@@ -45,7 +45,7 @@ export default function NavBar() {
               // Add Profile Icon
               <>
               <div className="relative">
-              <Link href="/user/profile">
+              <Link href="/user/profile/userdetails">
                 <button type="button" className="flex items-center gap-x-2 text-sm font-medium rounded-xl bg-white border border-gray-200 text-black hover:bg-gray-100 focus:outline-none focus:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:hover:bg-white/10 dark:text-white dark:hover:text-white dark:focus:text-white">
                   {user.photoURL ? (
                     <img className="w-8 h-8 rounded-full" src={user.photoURL} alt="User" />

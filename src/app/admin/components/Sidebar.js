@@ -14,10 +14,48 @@ import { cn } from "../../../lib/utils";
 
 export function SidebarDemo({ children }) {
   const links = [
-    { label: "Dashboard", href: "/admin/dashboard", icon: <IconBrandTabler className="icon-style" /> },
-    { label: "Warehouse", href: "/admin/warehouse", icon: <IconUserBolt className="icon-style" /> },
-    { label: "Settings", href: "#", icon: <IconSettings className="icon-style" /> },
-    { label: "Logout", href: "#", icon: <IconArrowLeft className="icon-style" /> },
+    {
+      label: "Dashboard",
+      href: "/admin/dashboard",
+      icon: (
+        <IconBrandTabler className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
+      ),
+    },
+    {
+      label: "Warehouse",
+      href: "/admin/warehouse",
+      icon: (
+        <IconUserBolt className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
+      ),
+    },
+    {
+      label: "Stock Locations",
+      href: "/admin/stock-location",
+      icon: (
+        <IconUserBolt className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
+      ),
+    },
+    {
+      label: "Stock Management",
+      href: "/admin/stock-management",
+      icon: (
+        <IconUserBolt className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
+      ),
+    },
+    {
+      label: "Settings",
+      href: "#",
+      icon: (
+        <IconSettings className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
+      ),
+    },
+    {
+      label: "Logout",
+      href: "#",
+      icon: (
+        <IconArrowLeft className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
+      ),
+    },
   ];
 
   const [open, setOpen] = useState(true);
