@@ -6,7 +6,7 @@ import {
   signOut,
   onAuthStateChanged,
   updateProfile,
-  updateEmail,
+  updatePassword,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   sendPasswordResetEmail,
@@ -16,8 +16,6 @@ import {
 } from "firebase/auth";
 import { auth } from "../lib/firebase";
 import { fetchGraphQLData } from '../lib/graphqlClient';
-
-
 
 // Create AuthContext
 const AuthContext = createContext();
@@ -245,6 +243,33 @@ export const AuthContextProvider = ({ children }) => {
     }
   };
 
+  // Validate Password
+  const validateUserPassword = async (oldpassword) => {
+    try {
+      const email = auth.currentUser.email;
+      const userCredential = await signInWithEmailAndPassword(auth, email, oldpassword);
+      const user = userCredential.user;
+      if (user) {
+        return { success: true, message: "Password validation successful!" };
+      }
+      return { success: false, errorCode: null, message: "Password validation failed!" };
+    } catch (error) {
+      console.error('Error during valiadting password:', error);
+      return { success: false, errorCode: error.code, message: `Password validation failed!: ${error.message}` };
+    }
+  };
+
+  // Set new password
+  const setUserPassword = async (password) => {
+    try {
+      const user = auth.currentUser;
+      await updatePassword(user, password);
+      return { success: true, message: "Password updated successfully!" };
+    } catch (error) {
+      console.error('Error during password update:', error);
+      return { success: false, message: `Password update failed: ${error.message}` };
+    }
+  }
 
   const sendEmailValidation = async (user) => {
     console.log("Send email validation: ", user);
@@ -321,7 +346,7 @@ export const AuthContextProvider = ({ children }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, googleSignIn, emailandPasswordSignUp, emailandPasswordSignIn, logout, resetPassword, getUserByEmail, sendEmailValidation, updateUserProfile }}>
+    <AuthContext.Provider value={{ user, googleSignIn, emailandPasswordSignUp, emailandPasswordSignIn, logout, resetPassword, getUserByEmail, sendEmailValidation, updateUserProfile, validateUserPassword, setUserPassword }}>
       {children}
     </AuthContext.Provider>
   );

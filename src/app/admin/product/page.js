@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { gql } from "graphql-request";
 import { fetchGraphQLData } from "../../../lib/graphqlClient";
 
+
 // GraphQL Queries and Mutations
 const GET_PRODUCTS = gql`
   query Products {
