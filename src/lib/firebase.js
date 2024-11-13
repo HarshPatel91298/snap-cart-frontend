@@ -1,5 +1,6 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth } from 'firebase/auth';
+import { getStorage } from "firebase/storage"; // Import the Firebase Storage module
 
 // Initialize Firebase once, and reuse the same app instance
 const firebaseConfig = {
@@ -20,5 +21,6 @@ if (!getApps().length) {
 }
 
 const auth = getAuth(app);
+const storage = getStorage(app); // Initialize Firebase Storage
 
-export { auth };
+export { auth, storage }; // Export storage along with auth
