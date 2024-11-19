@@ -1,5 +1,6 @@
 import React from "react";
 import { PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
+require("dotenv").config();
 
 
 export default function CheckoutForm({ dpmCheckerLink }) {
@@ -18,11 +19,14 @@ export default function CheckoutForm({ dpmCheckerLink }) {
 
     setIsLoading(true);
 
+    const FRONTEND_DOMAIN = process.env.NEXT_PUBLIC_APP_FRONTEND_DOMAIN;
+    console.log("FRONTEND_DOMAIN", FRONTEND_DOMAIN);
+
     const { error } = await stripe.confirmPayment({
       elements,
       confirmParams: {
         // Change this to your payment completion page
-        return_url: "http://localhost:3000/user/order/payment/payment-process",
+        return_url: `${FRONTEND_DOMAIN}/user/order/payment/payment-process`,
       },
     });
 

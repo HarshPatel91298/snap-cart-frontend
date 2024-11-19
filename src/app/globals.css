@@ -63,3 +63,105 @@ input[type="range"]::-webkit-slider-thumb {
   border: 2px solid #10b981;
   border-radius: 50%;
 }
+
+
+.dt-layout-row:has(.dt-search),
+.dt-layout-row:has(.dt-length),
+.dt-layout-row:has(.dt-paging) {
+  display: none !important;
+} 
+
+
+
+/* The switch - the box around the slider */
+/* The switch */
+.switch {
+  font-size: 12px; /* Even smaller font size */
+  position: relative;
+  display: inline-block;
+  width: 2.4em; /* Reduced width for a smaller toggle */
+  height: 1.4em; /* Reduced height for a smaller toggle */
+}
+
+/* Hide the default checkbox */
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+/* The slider */
+.slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background: #eb5b34; /* Default color for inactive state */
+  border-radius: 50px;
+  transition: all 0.4s cubic-bezier(0.23, 1, 0.320, 1);
+}
+
+/* The circle inside the slider */
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 1em; /* Even smaller circle */
+  width: 1em; /* Even smaller circle */
+  left: 0.2em; /* Adjusted for better alignment */
+  bottom: 0.2em; /* Adjusted for better alignment */
+  background-color: white;
+  border-radius: 50%;
+  box-shadow: 0 0px 10px rgba(0, 0, 0, 0.4);
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* When checked, change the background color */
+.switch input:checked + .slider {
+  background: #4caf50; /* Active state color */
+}
+
+/* Move the circle to the right when checked */
+.switch input:checked + .slider:before {
+  transform: translateX(1em); /* Move the circle to the right */
+}
+
+/* Dark mode styles */
+@media (prefers-color-scheme: dark) {
+  .slider {
+    background: #4caf50;
+  }
+  .slider:before {
+    background-color: #333;
+  }
+}
+
+.switch input:checked + .slider {
+  background: #34eb56;
+}
+
+.switch input:focus + .slider {
+  box-shadow: 0 0 1px #b84fce;
+}
+
+.switch input:checked + .slider:before {
+  transform: translateX(1.2em); /* Move the circle to the right */
+  width: 1.4em; /* Slightly bigger circle on checked state */
+  height: 1.4em; /* Slightly bigger circle on checked state */
+  bottom: 0;
+}
+
+
+/* Alert Styling */
+/* Define the slide-in animation */
+@keyframes slideInFromRight {
+  from {
+      transform: translateX(100%); /* Start fully off-screen to the right */
+  }
+  to {
+      transform: translateX(0); /* End at its original position */
+  }
+}
+
+/* Apply the animation to the alert */
+.alert-animation {
+  animation: slideInFromRight 0.3s ease-out; /* 0.8s for smooth transition */
+}

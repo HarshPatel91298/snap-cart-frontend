@@ -1,17 +1,9 @@
 "use client";
-import PrelineScript from "../../../components/PrelineScript";
-import dynamic from "next/dynamic";
-
-const NextTopLoader = dynamic(() => import('nextjs-toploader'), { ssr: false });
-
-export default function AdminLayout({ children }) {
-  console.log(children);
-
+import { SidebarDemo } from "../components/Sidebar";
+export default function AdminDashboardLayout({ children }) {
   return (
-    <div>
+    <SidebarDemo>
         {children}
-      <PrelineScript />
-      <NextTopLoader />
-    </div>
+    </SidebarDemo>
   );
 }

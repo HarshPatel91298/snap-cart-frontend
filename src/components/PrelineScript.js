@@ -3,8 +3,11 @@
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 
+
 export default function PrelineScript() {
   const path = usePathname();
+
+  console.log("PrelineScript", path);
 
   useEffect(() => {
     const loadPreline = async () => {
