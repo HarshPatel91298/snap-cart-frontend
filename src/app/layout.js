@@ -2,6 +2,9 @@ import "./globals.css";
 import "../styles/style.css";
 import { AuthContextProvider } from "../context/AuthContext";
 
+
+
+
 export const metadata = {
   title: "SnapCart",
   description: "Your go-to e-commerce platform",
@@ -12,6 +15,10 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <head>
         {/* Meta and other head elements here */}
+        <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.12.1/js/jquery.dataTables.min.js"></script>
+<link href="https://cdn.datatables.net/1.12.1/css/jquery.dataTables.min.css" rel="stylesheet"/>
+
       </head>
       <body>
         <AuthContextProvider>
@@ -33,7 +40,8 @@ export default function RootLayout({ children }) {
           referrerPolicy="no-referrer"
         ></script>
 
-        {/* Inline script to initialize HSFileUpload with error handling */}
+        {/* Scripts for Datatable */}
+        
        
       </body>
     </html>

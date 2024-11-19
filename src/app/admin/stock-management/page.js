@@ -11,7 +11,6 @@ const LIST_PRODUCTS_QUERY = gql`
          products {
             id
             name
-            stock
             sku
             is_active
         }
@@ -359,8 +358,17 @@ const StockManagementPage = () => {
         }
     }, [user]);
 
+    const isProductAlreadyCreated = (productId) => {
+        return stocks.some((stock) => stock.product_id === productId);
+    };
+
     const createStock = async (event) => {
         event.preventDefault();
+
+        if (isProductAlreadyCreated(productId)) {
+            setError('Product already exists in the stock data');
+            return;
+        }
         const stockInput = {
             product_id: productId,
             warehouse_id: warehouseId,

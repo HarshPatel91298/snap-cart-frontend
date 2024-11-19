@@ -8,6 +8,9 @@ import { useDropzone } from "react-dropzone";
 import { TrashIcon, XIcon } from '@heroicons/react/solid';
 import { storage } from "../../../lib/firebase";
 import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from "firebase/storage";
+import Datatable from '../components/Datatable';
+import ConfirmationModal from '../components/ConfirmationModel';
+import Alert from '../components/Alert';
 
 
 // GraphQL Queries and Mutations
@@ -18,7 +21,7 @@ const GET_PRODUCTS = gql`
       name
       description
       price
-      stock
+      cost_price
       sku
       is_active
       brand_id
@@ -39,7 +42,7 @@ const ADD_PRODUCT = gql`
         name
         description
         price
-        stock
+        cost_price
         sku
         is_active
         brand_id
@@ -63,7 +66,7 @@ const UPDATE_PRODUCT = gql`
         name
         description
         price
-        stock
+        cost_price
         sku
         is_active
         brand_id
@@ -154,6 +157,15 @@ query AttachmentById($attachmentByIdId: ID!) {
 `;
 
 
+const MUTATION_DELETE_ATTACHMENT = gql`
+  mutation deleteAttachment($deleteAttachmentId: ID!) {
+    deleteAttachment(id: $deleteAttachmentId) {
+      status
+      message
+    }
+  }
+`;
+
 // Image store format
 // {
 //   file: { name: "image.jpg", type: "image/jpeg" },
@@ -170,7 +182,7 @@ export default function AdminProducts() {
     name: "",
     description: "",
     price: 0,
-    stock: 0,
+    cost_price: 0,
     sku: "",
     brand_id: "",
     category_id: "",
@@ -185,6 +197,17 @@ export default function AdminProducts() {
   const [subCategories, setSubCategories] = useState([]);
   const [errors, setErrors] = useState({});
   const { user } = UserAuth();
+
+
+  // Delete Modal States
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deleteProductId, setDeleteProductId] = useState(null);
+
+
+  // Archiv Modal States
+  const [archiveConfrimText, setArchiveConfrimText] = useState('');
+  const [isArchiveModalOpen, setIsArchiveModalOpen] = useState(false);
+  const [archiveProductId, setArchiveProductId] = useState(null);
 
 
   // State to update the product images to be deleted
@@ -215,49 +238,59 @@ export default function AdminProducts() {
 
   // On Edit, set the image data for display image and other images
   const setProductImages = async (product) => {
+    console.log("Setting product images", product);
 
-    if (!product.display_image || !product.images) {
+    if (!product.display_image && !product.images) {
+      console.log("No images to set");
       return;
     }
-    const displayImage = await getAttachmentById(product.display_image);
-    console.log("displayImage DDDD", displayImage);
-    setDisplayImage({
-      file: { name: displayImage.name, type: displayImage.type },
-      url: displayImage.url,
-      isUploaded: true,
-      attachmentId: displayImage.id,
-    });
 
-    const images = await Promise.all(product.images.map((imageId) => getAttachmentById(imageId)));
-    // Set the images with display image at the first index
-    setImageIds(images.map((image) => (
-      { file: { name: image.name, type: image.type, attachmentId: image.id }, url: image.url, isUploaded: true, attachmentId: image.id }
-    )));
+    // Fetch the images using their IDs
+    const images = await Promise.all(
+      product.images.map((imageId) => getAttachmentById(imageId))
+    );
+
+    // Format the image data
+    const formattedImages = images.map((image) => ({
+      file: { name: image.name, type: image.type, attachmentId: image.id },
+      url: image.url,
+      isUploaded: true,
+      attachmentId: image.id,
+    }));
+
+    // Set the images
+    setImageIds(formattedImages);
+
+    // Find the display image
+    const displayImage = formattedImages.find(
+      (image) => product.display_image === image.attachmentId
+    );
+
+    // Set the display image
+    setDisplayImage(displayImage);
   };
 
-  const openModal = async (product = null) => {
+
+  const toggleModal = async (product = null) => {
     if (product) {
-
       console.log("product $$$$$", product);
-
       setEditingProduct(product);
       await setProductImages(product);
-
     } else {
+      setEditingProduct(null);
       setNewProduct({
         name: "",
         description: "",
         price: 0,
-        stock: 0,
+        cost_price: 0,
         sku: "",
         brand_id: "",
         category_id: "",
         sub_category_id: "",
         display_image: "",
       });
-      setEditingProduct(null);
     }
-    setIsModalOpen(true);
+    setIsModalOpen(!isModalOpen);
 
 
   };
@@ -294,12 +327,25 @@ export default function AdminProducts() {
       errors.description = "Description is required.";
     }
 
-    if (!currentProduct.price || currentProduct.price <= 0) {
+    // Ensure cost_price is a number and is not negative
+    if (currentProduct.cost_price && isNaN(currentProduct.cost_price)) {
+      errors.cost_price = "Cost price must be a valid number.";
+    } else if (parseFloat(currentProduct.cost_price) < 0) {
+      errors.cost_price = "Cost price cannot be negative.";
+    }
+
+    // Ensure price is a number and greater than zero
+    if (currentProduct.price && isNaN(currentProduct.price)) {
+      errors.price = "Price must be a valid number.";
+    } else if (parseFloat(currentProduct.price) <= 0) {
       errors.price = "Price must be greater than zero.";
     }
 
-    if (currentProduct.stock < 0) {
-      errors.stock = "Stock cannot be negative.";
+    // Ensure cost_price is not greater than price
+    if (
+      parseFloat(currentProduct.cost_price) > parseFloat(currentProduct.price)
+    ) {
+      errors.cost_price = "Cost price cannot be greater than the price.";
     }
 
     if (!currentProduct.sku || currentProduct.sku.trim() === "") {
@@ -320,14 +366,14 @@ export default function AdminProducts() {
 
     // Add other validations as needed for images, etc.
     if (editingProduct) {
-    if (!imageIds.length && deletedImages.length >= 0 && !files.length) {
+      if (!imageIds.length && deletedImages.length >= 0 && !files.length) {
         errors.images = "Please upload at least one image.";
+      }
+    } else {
+      if (!files.length) {
+        errors.images = "Please upload at least one image.";
+      }
     }
-  } else {
-    if (!files.length) {
-      errors.images = "Please upload at least one image.";
-    }
-  }
 
     if (!displayImage) {
       errors.images = "Please select a display image.";
@@ -339,7 +385,6 @@ export default function AdminProducts() {
   const handleCreateOrUpdateProduct = async (e) => {
     e.preventDefault();
 
-
     const errors = validateFields(editingProduct ? editingProduct : newProduct);
     if (Object.keys(errors).length > 0) {
       setErrors(errors);
@@ -349,30 +394,26 @@ export default function AdminProducts() {
     }
 
 
-
     const mutation = editingProduct ? UPDATE_PRODUCT : ADD_PRODUCT;
 
     const attachmentData = await uploadFiles(); // Upload images to storage and save to MongoDB
-    console.log("attachmentData", attachmentData);
-
-
     await deleteFirebaseImages(); // Delete images from storage
 
-    console.log("displayImage RRRR", displayImage);
 
-    // Convert stock and price to float
+    // Convert Cost Price and price to float
     const productData = editingProduct
       ? {
-        ...editingProduct, stock: parseFloat(editingProduct.stock), price: parseFloat(editingProduct.price),
+        ...editingProduct, cost_price: parseFloat(editingProduct.cost_price), price: parseFloat(editingProduct.price),
         display_image: displayImage.attachmentId || attachmentData.find((attachment) => attachment.name === displayImage.file.name)?.id || "",
         images: [...imageIds.map((image) => image.attachmentId), ...attachmentData.map((attachment) => attachment.id)]
       }
       : {
-        ...newProduct, stock: parseFloat(newProduct.stock), price: parseFloat(newProduct.price),
+        ...newProduct, cost_price: parseFloat(newProduct.cost_price), price: parseFloat(newProduct.price),
         display_image: attachmentData.find((attachment) => attachment.name === displayImage.file.name)?.id || "",
         images: attachmentData.map((attachment) => attachment.id),
 
       };
+
 
     if (editingProduct) {
       delete productData.id;
@@ -399,18 +440,6 @@ export default function AdminProducts() {
       } else {
         setProducts([...products, updatedProduct]);
       }
-      // const stateProducts = products.map((product) =>
-      //   product.id === updatedProduct.id ? updatedProduct : product
-      // );
-
-
-      //
-
-
-      // console.log("stateProducts %%%%%%", stateProducts);
-
-      // setProducts(stateProducts);
-
 
       setDeletedImages([]); // Reset the deleted images
       closeModal();
@@ -420,18 +449,29 @@ export default function AdminProducts() {
   };
 
 
-  const handleDeleteProduct = async (id) => {
+  const handleDeleteProduct = async () => {
     try {
-      await fetchGraphQLData(DELETE_PRODUCT, { deleteProductId: id });
-      fetchData();
+      const response = await fetchGraphQLData(DELETE_PRODUCT, { deleteProductId: deleteProductId });
+
+      if (response.deleteProduct.status === true) {
+
+        // Delete the product from the state
+        const stateProducts = products.filter((product) => product.id !== deleteProductId);
+        setProducts(stateProducts);
+      } else {
+        console.error("Error deleting product:", response.deleteProduct.message);
+      }
+      // Close the modal
+      toggleDeleteModal();
     } catch (error) {
       console.error("Error deleting product:", error);
     }
   };
 
-  const handleToggleProductStatus = async (id) => {
+  const handleToggleProductStatus = async () => {
+    console.log("archiveProductId", archiveProductId);
     try {
-      const response = await fetchGraphQLData(TOGGLE_PRODUCT_STATUS, { toggleProductStatusByIdId: id });
+      const response = await fetchGraphQLData(TOGGLE_PRODUCT_STATUS, { toggleProductStatusByIdId: archiveProductId });
       if (response.toggleProductStatusById.status === false) {
         console.error("Error toggling product status:", response.toggleProductStatusById.message);
         return;
@@ -447,9 +487,9 @@ export default function AdminProducts() {
 
       setProducts(stateProducts);
 
+      // Close the modal
+      toggleArchiveModal();
 
-
-      
     } catch (error) {
       console.error("Error toggling product status:", error);
     }
@@ -458,7 +498,10 @@ export default function AdminProducts() {
   const getBrandName = (id) => brands.find((brand) => brand.id === id)?.name || "Unknown";
   const getCategoryName = (id) => categories.find((category) => category.id === id)?.name || "Unknown";
   const getSubCategoryName = (id) => subCategories.find((subCategory) => subCategory.id === id)?.name || "Unknown";
-  const getSubCategoriesByCategoryId = (categoryId) => subCategories.filter((subCategory) => subCategory.category_id === categoryId);
+  const getSubCategoriesByCategoryId = (categoryId) => {
+
+    return subCategories.filter((subCategory) => subCategory.category_id === categoryId);
+  };
 
 
 
@@ -618,8 +661,10 @@ export default function AdminProducts() {
   const deleteFirebaseImages = async () => {
     deletedImages.forEach(async (image) => {
       const storageRef = ref(storage, `images/${image.file.name}`);
-      deleteObject(storageRef).then(() => {
+      deleteObject(storageRef).then(async () => {
         console.log("Image deleted from storage");
+
+        await deleteAttachmentById(image.attachmentId);
       }).catch((error) => {
         console.error("Error deleting image from storage: ", error);
       });
@@ -635,6 +680,21 @@ export default function AdminProducts() {
       return response.attachmentById.data;
     } catch (error) {
       console.error("Error fetching attachment by ID:", error);
+    }
+  };
+
+
+  const deleteAttachmentById = async (attachmentId) => {
+    console.log("Deleting attachment with ID:", attachmentId);
+    try {
+      const response = await fetchGraphQLData(MUTATION_DELETE_ATTACHMENT, { deleteAttachmentId: attachmentId });
+      if (response.deleteAttachment.status === true) {
+        console.log("Attachment deleted successfully");
+      } else {
+        console.error("Error deleting attachment:", response.deleteAttachment.message);
+      }
+    } catch (error) {
+      console.error("Error deleting attachment:", error);
     }
   };
 
@@ -671,147 +731,109 @@ export default function AdminProducts() {
     })),
   ];
 
+  const toggleDeleteModal = async (product = null) => {
+    setIsDeleteModalOpen(!isDeleteModalOpen);
+    if (product) {
+      setDeleteProductId(product);
+    } else {
+      setDeleteProductId(null);
+    }
+  }
+
+  // const openDeleteModal = (product) => {
+  //     setDeleteProductId(product.id);
+  //     setIsDeleteModalOpen(true);
+  // }
+
+  // const closeDeleteModal = () => {
+  //     setIsDeleteModalOpen(false);
+  //     setDeleteProductId(null);
+  // }
+
+  const toggleArchiveModal = async (product = null) => {
+    setIsArchiveModalOpen(!isArchiveModalOpen);
+    if (product) {
+      setArchiveProductId(product.id);
+    } else {
+      setArchiveProductId(null);
+    }
+  }
+
+  const openArchiveModal = (product) => {
+    setArchiveConfrimText(product.status == "Inactive" ? 'Active' : 'Inactive');
+    setArchiveProductId(product.id);
+    setIsArchiveModalOpen(true);
+  }
+
+  const closeArchiveModal = () => {
+    setIsArchiveModalOpen(false);
+    setArchiveProductId(null);
+    setArchiveConfrimText(null);
+  }
+
 
   return (
     <>
+
+
       <div className="w-full px-4 py-10 sm:px-6 lg:px-8 lg:py-14 mx-auto">
-        <div className="flex flex-col">
+        <div className="flex flex-col" >
+
           <div className="-m-1.5 overflow-x-auto">
             <div className="p-1.5 min-w-full inline-block align-middle">
-              <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden dark:bg-neutral-800 dark:border-neutral-700">
-                <div className="px-6 py-4 grid gap-3 md:flex md:justify-between md:items-center border-b border-gray-200 dark:border-neutral-700">
-                  <div>
-                    <h2 className="text-xl font-semibold text-gray-800 dark:text-neutral-200">
-                      Products
-                    </h2>
-                    <p className="text-sm text-gray-600 dark:text-neutral-400">
-                      Manage your products here.
-                    </p>
-                  </div>
-                  <div>
-                    <button
-                      className="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:bg-blue-700"
-                      onClick={() => openModal()}
-                    >
-                      <svg
-                        className="shrink-0 h-4 w-4"
-                        xmlns="http://www.w3.org/2000/svg"
-                        width={24}
-                        height={24}
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth={2}
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M5 12h14" />
-                        <path d="M12 5v14" />
-                      </svg>
-                      Add Product
-                    </button>
-                  </div>
-                </div>
-                <table className="min-w-full divide-y divide-gray-200 dark:divide-neutral-700">
-                  <thead className="bg-gray-50 dark:bg-neutral-800">
-                    <tr>
-                      <th className="px-6 py-3 text-left">Name</th>
-                      <th className="px-6 py-3 text-left">Description</th>
-                      <th className="px-6 py-3 text-left">Brand</th>
-                      <th className="px-6 py-3 text-left">Category</th>
-                      <th className="px-6 py-3 text-left">Sub Category</th>
-                      <th className="px-6 py-3 text-left">Price</th>
-                      <th className="px-6 py-3 text-left">Stock</th>
-                      <th className="px-6 py-3 text-left">SKU</th>
-                      <th className="px-6 py-3 text-left">Status</th>
-                      <th className="px-6 py-3 text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200 dark:divide-neutral-700">
-                    {loading ? (
-                      <tr>
-                        <td colSpan="7" className="px-6 py-4 text-center">
-                          Loading...
-                        </td>
-                      </tr>
-                    ) : (
-                      products.map((product) => (
-                        <tr key={product.id}>
-                          <td className="px-6 py-4">{product.name}</td>
-                          <td className="px-6 py-4">{product.description}</td>
-                          <td className="px-6 py-4">{getBrandName(product.brand_id)}</td>
-                          <td className="px-6 py-4">{getCategoryName(product.category_id)}</td>
-                          <td className="px-6 py-4">{getSubCategoryName(product.sub_category_id)}</td>
-                          <td className="px-6 py-4">{product.price}</td>
-                          <td className="px-6 py-4">{product.stock}</td>
-                          <td className="px-6 py-4">{product.sku}</td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            {product.is_active ? (
-                              <span className="py-1 px-1.5 inline-flex items-center gap-x-1 text-xs font-medium bg-green-100 text-green-800 rounded-full dark:bg-green-500/10 dark:text-green-500">
-                                <svg
-                                  className="h-4 w-4"
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  width={16}
-                                  height={16}
-                                  fill="currentColor"
-                                  viewBox="0 0 16 16"
-                                >
-                                  <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0z" />
-                                  <path d="M6.293 9.293a1 1 0 011.414 0L10 11.586l3.293-3.293a1 1 0 111.414 1.414L10 14.414l-4.707-4.707a1 1 0 010-1.414z" />
-                                </svg>
-                                Active
-                              </span>
-                            ) : (
-                              <span className="py-1 px-1.5 inline-flex items-center gap-x-1 text-xs font-medium bg-red-100 text-red-800 rounded-full dark:bg-red-500/10 dark:text-red-500">
-                                <svg
-                                  className="h-4 w-4"
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  width={16}
-                                  height={16}
-                                  fill="currentColor"
-                                  viewBox="0 0 16 16"
-                                >
-                                  <path d="M16 8A8 8 0 1 0 0 8a8 8 0 0 0 16 0z" />
-                                  <path d="M6.293 6.293a1 1 0 011.414 1.414L6.414 9l1.293 1.293a1 1 0 11-1.414 1.414L5 10.414l-1.293 1.293a1 1 0 01-1.414-1.414L3.586 9 .293 6.293a1 1 0 011.414-1.414L5 7.586l1.293-1.293a1 1 0 011.414 0z" />
-                                </svg>
-                                Inactive
-                              </span>
-                            )}
-                          </td>
-                          <td className="px-6 py-4 text-right space-x-4">
-                            <button
-                              onClick={() => openModal(product)}
-                              className="text-blue-600 hover:text-blue-900 dark:text-blue-500 dark:hover:text-blue-700"
-                            >
-                              Edit
-                            </button>
-                            <button
-                              onClick={() => handleDeleteProduct(product.id)}
-                              className="text-red-600 hover:text-red-900 dark:text-red-500 dark:hover:text-red-700"
-                            >
-                              Delete
-                            </button>
-                            <button
-                              onClick={() => handleToggleProductStatus(product.id)}
-                              className={`${product.is_active
-                                ? "text-yellow-600 hover:text-yellow-900"
-                                : "text-green-600 hover:text-green-900"
-                                }`}
-                            >
-                              {product.is_active ? "Deactivate" : "Activate"}
-                            </button>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
+
+              <Datatable
+
+                title="Products"
+                description="List of all products"
+                columns={[
+                  { label: "Name", field: "name", type: "text" },
+                  { label: "Description", field: "description", type: "text" },
+                  { label: "Brand", field: "brand_id", type: "text", formatter: (brand_id) => getBrandName(brand_id) },
+                  { label: "Category", field: "category_id", type: "text", formatter: (category_id) => getCategoryName(category_id) },
+                  { label: "Sub Category", field: "sub_category_id", type: "text", formatter: (sub_category_id) => getSubCategoryName(sub_category_id) },
+                  { label: "Price", field: "price", type: "amount" },
+                  { label: "Cost Price", field: "cost_price", type: "amount" },
+                  { label: "SKU", field: "sku", type: "text" },
+                  {
+                    label: "Status", field: "is_active", type: "boolean",
+                    style: {
+                      'Active': 'bg-green-100 text-green-800 dark:bg-green-500/10 dark:text-green-500',
+                      'Inactive': 'bg-red-100 text-red-800 dark:bg-red-500/10 dark:text-red-500'
+                    },
+                    onClick: (product) => toggleArchiveModal(product),
+
+                  },
+                ]}
+                data={products.map((product) => ({
+                  id: product.id,
+                  name: product.name,
+                  description: product.description,
+                  brand_id: product.brand_id,
+                  category_id: product.category_id,
+                  sub_category_id: product.sub_category_id,
+                  display_image: product.display_image,
+                  images: product.images,
+                  price: product.price,
+                  cost_price: product.cost_price,
+                  sku: product.sku,
+                  is_active: product.is_active,
+                }))}
+                filters={[
+                  { label: 'Active', value: 'Active' },
+                  { label: 'Inactive', value: 'Inactive' },
+                ]}
+                loading={false}
+                onCreate={() => toggleModal()}
+                onEdit={(product) => toggleModal(product)}
+                onDelete={(product) => toggleDeleteModal(product)}
+              />
+
+
             </div>
           </div>
         </div>
       </div>
-
       {isModalOpen && (
         <>
 
@@ -859,11 +881,25 @@ export default function AdminProducts() {
                   {errors.description && <span className="text-red-500 text-sm">{errors.description}</span>}
                 </div>
 
+                {/* Cost Price */}
+                <div className="mb-4">
+                  <label className="block text-sm font-medium mb-1">Cost Price</label>
+                  <input
+                    type="text"
+                    name="cost_price"
+                    value={editingProduct ? editingProduct.cost_price : newProduct.cost_price}
+                    onChange={handleInputChange}
+                    className="border p-2 rounded w-full bg-gray-50 dark:bg-neutral-700"
+                    placeholder="Cost Price"
+                  />
+                  {errors.cost_price && <span className="text-red-500 text-sm">{errors.cost_price}</span>}
+                </div>
+
                 {/* Price */}
                 <div className="mb-4">
                   <label className="block text-sm font-medium mb-1">Price</label>
                   <input
-                    type="number"
+                    type="text"
                     name="price"
                     value={editingProduct ? editingProduct.price : newProduct.price}
                     onChange={handleInputChange}
@@ -872,21 +908,9 @@ export default function AdminProducts() {
                   />
                   {errors.price && <span className="text-red-500 text-sm">{errors.price}</span>}
                 </div>
-                
 
-                {/* Stock */}
-                <div className="mb-4">
-                  <label className="block text-sm font-medium mb-1">Stock</label>
-                  <input
-                    type="number"
-                    name="stock"
-                    value={editingProduct ? editingProduct.stock : newProduct.stock}
-                    onChange={handleInputChange}
-                    className="border p-2 rounded w-full bg-gray-50 dark:bg-neutral-700"
-                    placeholder="Stock"
-                  />
-                  {errors.stock && <span className="text-red-500 text-sm">{errors.stock}</span>}
-                </div>
+
+
 
                 {/* SKU */}
                 <div className="mb-4">
@@ -907,7 +931,7 @@ export default function AdminProducts() {
                   <label className="block text-sm font-medium mb-1">Brand</label>
                   <select
                     name="brand_id"
-                    value={editingProduct ? editingProduct.brand_id : newProduct.brand_id}
+                    value={editingProduct?.brand_id || newProduct?.brand_id || ""}
                     onChange={handleInputChange}
                     className="border p-2 rounded w-full bg-gray-50 dark:bg-neutral-700"
                   >
@@ -918,7 +942,8 @@ export default function AdminProducts() {
                       </option>
                     ))}
                   </select>
-                {errors.brand_id && <span className="text-red-500 text-sm">{errors.brand_id}</span>}
+
+                  {errors.brand_id && <span className="text-red-500 text-sm">{errors.brand_id}</span>}
                 </div>
 
                 {/* Category */}
@@ -937,7 +962,7 @@ export default function AdminProducts() {
                       </option>
                     ))}
                   </select>
-                {errors.category_id && <span className="text-red-500 text-sm">{errors.category_id}</span>}
+                  {errors.category_id && <span className="text-red-500 text-sm">{errors.category_id}</span>}
                 </div>
 
                 {/* Sub Category */}
@@ -950,13 +975,13 @@ export default function AdminProducts() {
                     className="border p-2 rounded w-full bg-gray-50 dark:bg-neutral-700"
                   >
                     <option value="">Select Sub Category</option>
-                    {getSubCategoriesByCategoryId(newProduct.category_id).map((subCategory) => (
+                    {getSubCategoriesByCategoryId(editingProduct ? editingProduct.category_id : newProduct.category_id).map((subCategory) => (
                       <option key={subCategory.id} value={subCategory.id}>
                         {subCategory.name}
                       </option>
                     ))}
                   </select>
-                {errors.sub_category_id && <span className="text-red-500 text-sm">{errors.sub_category_id}</span>}
+                  {errors.sub_category_id && <span className="text-red-500 text-sm">{errors.sub_category_id}</span>}
                 </div>
 
                 {/* File Upload Section */}
@@ -975,7 +1000,7 @@ export default function AdminProducts() {
                       </p>
                       {errors.images && <span className="text-red-500 text-sm mt-3">{errors.images}</span>}
                     </div>
-                    
+
                   </div>
 
                   <div className="mt-4 grid grid-cols-3 gap-4">
@@ -1054,8 +1079,6 @@ export default function AdminProducts() {
                   )}
                 </div>
 
-
-
                 <div className="mt-4 flex justify-end">
                   <button
                     type="submit"
@@ -1069,6 +1092,27 @@ export default function AdminProducts() {
           </div>
         </>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={isDeleteModalOpen}
+        onCancel={toggleDeleteModal}
+        onConfirm={handleDeleteProduct}
+        message="Are you sure you want to delete this product?"
+        confirmText="Delete"    // Optional
+        cancelText="Cancel"    // Optional
+      />
+
+      {/* Archive Confirmation Modal*/}
+      <ConfirmationModal
+        isOpen={isArchiveModalOpen}
+        onCancel={toggleArchiveModal}
+        onConfirm={handleToggleProductStatus}
+        message="Are you sure you want to archive this product?"
+        confirmText={archiveConfrimText}   // Optional
+        cancelText="Cancel"    // Optional
+      />
+
     </>
   );
 }
