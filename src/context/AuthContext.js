@@ -22,6 +22,7 @@ const AuthContext = createContext();
 
 export const AuthContextProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [redirectURL , setRedirectURL] = useState(null);
 
   const googleSignIn = async () => {
     const provider = new GoogleAuthProvider();
@@ -346,7 +347,7 @@ export const AuthContextProvider = ({ children }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, googleSignIn, emailandPasswordSignUp, emailandPasswordSignIn, logout, resetPassword, getUserByEmail, sendEmailValidation, updateUserProfile, validateUserPassword, setUserPassword }}>
+    <AuthContext.Provider value={{ user, googleSignIn, emailandPasswordSignUp, emailandPasswordSignIn, logout, resetPassword, getUserByEmail, sendEmailValidation, updateUserProfile, validateUserPassword, setUserPassword, redirectURL, setRedirectURL }}>
       {children}
     </AuthContext.Provider>
   );

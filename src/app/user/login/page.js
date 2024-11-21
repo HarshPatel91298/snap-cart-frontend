@@ -7,7 +7,7 @@ import Link from 'next/link'
 
 export default function page() {
   const router = useRouter();
-  const { user, googleSignIn, emailandPasswordSignIn } = UserAuth();
+  const { user, googleSignIn, emailandPasswordSignIn, redirectURL } = UserAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -53,12 +53,20 @@ export default function page() {
     return valid;
   };
 
+  const handleRedirect = () => {
+    if (redirectURL) {
+      router.push(redirectURL);
+    } else {
+      router.push('/');
+    }
+  };
+
   const handleGoogleSignIn = async () => {
     try {
       await googleSignIn();
       setResponseMessage("Google sign-in successful!");
       setErrorMessage(""); // Clear any previous error message
-      router.push('/');
+      handleRedirect();
     } catch (error) {
       console.log(error);
     }
@@ -77,7 +85,7 @@ export default function page() {
       if (response?.success) {
         setResponseMessage("Sign-in successful!");
         setErrorMessage(""); // Clear any previous error message
-        router.push('/');
+        handleRedirect
       } else {
         // Display a user-friendly message based on errorCode
         switch (response?.errorCode) {

@@ -33,7 +33,7 @@ export default function Datatable({
         let filtered = data;
 
         // console.log({ columns });
-        // console.log({ data });
+        console.log({ data });
 
         // Apply filter if selected
         if (selectedFilter) {
