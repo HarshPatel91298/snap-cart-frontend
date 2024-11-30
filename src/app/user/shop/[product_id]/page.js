@@ -1,8 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { UserAuth } from '../../../../context/AuthContext';
 import { fetchGraphQLData } from '../../../../lib/graphqlClient';
-import { addToCart } from '../../../../utils/cartUtils';
+import { useCart } from '../../../../context/CartContext';
 
 const GET_PRODUCT_BY_ID_QUERY = `
   query getProductById($id: ID!) {
@@ -35,11 +34,12 @@ const QUERY_GET_ATTACHMENT_BY_ID = `
 `;
 
 export default function ProductPage({ params }) {
-  const { user } = UserAuth();
+  const { addToCart, setCartProducts } = useCart();
   const [product, setProduct] = useState(null);
   const [selectedImage, setSelectedImage] = useState('');
   const [imageUrls, setImageUrls] = useState([]);
   const [quantity, setQuantity] = useState(1); // New state for quantity
+
 
   // Fetch attachment by ID
   const getAttachmentById = async (id) => {
@@ -51,6 +51,8 @@ export default function ProductPage({ params }) {
       return '';
     }
   };
+
+ 
 
   // Fetch product data by ID
   useEffect(() => {
@@ -81,8 +83,15 @@ export default function ProductPage({ params }) {
   }, [params]);
 
   // Add product to cart
-  const handleAddToCart = async (operation) => {
-    await addToCart(product, quantity, operation, user);
+  const handleAddToCart = async () => {
+    await addToCart([{ product_id : product.id, quantity : quantity }]);
+    setCartProducts((prev) =>
+      prev.map((item) =>
+        item.id === product.id
+          ? { ...item, quantity: item.quantity + 1 }
+          : item
+      )
+    );
   };
 
   // Increase quantity
@@ -154,7 +163,7 @@ export default function ProductPage({ params }) {
           {/* Action Buttons */}
           <div className="mt-6 flex space-x-4">
             <button
-              onClick={() => handleAddToCart('add')}
+              onClick={() => handleAddToCart()}
               className="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700"
             >
               Add to Bag

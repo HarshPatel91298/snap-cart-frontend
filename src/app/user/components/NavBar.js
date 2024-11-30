@@ -2,10 +2,17 @@
 import { UserAuth } from "../../../context/AuthContext";
 import Link from 'next/link';
 import { useRouter } from 'nextjs-toploader/app';
+import { useCart } from "@/context/CartContext";
+import { useEffect } from "react";
 
 export default function NavBar() {
   const router = useRouter();
-  const { user, googleSignIn, logout } = UserAuth();
+  const { user, logout } = UserAuth();
+  const { cartItemCounter } = useCart();
+
+  useEffect(() => {
+    console.log(cartItemCounter);
+  }, [cartItemCounter]);
 
   const handleSignOut = async () => {
     try {
@@ -30,9 +37,13 @@ export default function NavBar() {
               <Link href="/user/cart">
                 <div className="relative">
                   <div className="absolute top-0 left-5">
-                    <p className="flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-xs text-white">
-                      3 {/* Replace with dynamic cart count */}
-                    </p>
+                    {
+                      cartItemCounter > 0 && (
+                        <p className="flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-xs text-white">
+                          {cartItemCounter || ''}
+                        </p>
+                      )
+                    }
                   </div>
                   <svg
                     xmlns="http://www.w3.org/2000/svg"

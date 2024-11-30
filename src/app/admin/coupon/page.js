@@ -8,7 +8,7 @@ import ConfirmationModal from '../components/ConfirmationModel';
 import Alert from '../components/Alert';
 
 import Select from 'react-select';
-import { set } from 'mongoose';
+import { model, set } from 'mongoose';
 
 
 
@@ -217,8 +217,8 @@ export default function CouponPage() {
     // Fetch Coupons
     const fetchCoupons = async () => {
         try {
-            const response = await fetchGraphQLData(QUERY_GET_COUPONS);
-            setCoupons(response.data.coupons);
+            const data = await fetchGraphQLData(QUERY_GET_COUPONS);
+            setCoupons(data.coupons);
             setLoading(false);
         } catch (error) {
             console.error('Error fetching coupons:', error);
@@ -230,16 +230,15 @@ export default function CouponPage() {
     // Fetch Products, Categories, Subcategories
     const fetchPCSData = async () => {
         try {
-            const response = await fetchGraphQLData(QUERY_GET_DATA);
-            console.log('Response:', response);
-            if (response.error) {
-                console.error('Error fetching data:', response.error);
-                throw new Error(response.error.status);
+            const data = await fetchGraphQLData(QUERY_GET_DATA);
+            if (data.error) {
+                console.error('Error fetching data:', data.error);
+                throw new Error(data.error.status);
             }
 
-            setProducts(response.data.products);
-            setCategories(response.data.categories);
-            setSubcategories(response.data.subCategories);
+            setProducts(data.products);
+            setCategories(data.categories);
+            setSubcategories(data.subCategories);
 
 
         } catch (error) {
@@ -266,6 +265,21 @@ export default function CouponPage() {
         return `${year}-${month}-${day}`;
     };
 
+    const validateResponse = (data) => {
+        if (data.error) {
+            console.error('Error fetching data:', data.error);
+            const error = data.error.response.errors[0].message;
+            if (error.includes('Coupon')) {
+                console.error('HHH :', newCoupon);
+                console.error('Form Errors:', formErrors);
+                setFormErrors({ code: error });
+            } else {
+                throw new Error(data.error.status);
+            }
+        }
+        return false;
+    };
+
     // Create Coupon
     const createCoupon = async () => {
         console.log('Creating Coupon:', newCoupon);
@@ -287,15 +301,30 @@ export default function CouponPage() {
             newCoupon.applicable_categories = selectedCategories.map((category) => category.value);
             newCoupon.applicable_subcategories = selectedSubcategories.map((subCategory) => subCategory.value);
 
+        
 
-            const response = await fetchGraphQLData(QUERY_CREATE_COUPON, {
+            const data = await fetchGraphQLData(QUERY_CREATE_COUPON, {
                 input: newCoupon,
             });
-            console.log('Created Coupon Res#:', response);
+            console.log('Created Coupon Res#:', data);
+
+            if (!data.error) {
+                setCoupons((prevCoupons) => [...prevCoupons, data.createCoupon]);
+                resetModel();
+            } else {
+
+            
+                newCoupon.valid_from = convertToHTMLDate(newCoupon.valid_from);
+                newCoupon.valid_until = convertToHTMLDate(newCoupon.valid_until);
+                validateResponse(data);
+            }
+
         } catch (error) {
             console.error('Error creating coupon:', error);
         }
     };
+
+
 
     // Update Coupon
     const updateCoupon = async () => {
@@ -321,18 +350,18 @@ export default function CouponPage() {
             setEditLoading(true);
 
             // Send the updated coupon to the backend
-            const response = await fetchGraphQLData(QUERY_UPDATE_COUPON, {
+            const data = await fetchGraphQLData(QUERY_UPDATE_COUPON, {
                 updateCouponId: editingCouponId,
                 input: variables,
             });
 
-            console.log('Updated Coupon Res#:', response);
+            console.log('Updated Coupon Res#:', data);
 
-            if (!response.error) {
+            if (!data.error) {
 
                 // Update the coupon list state
-                const updatedCoupon = response.data.updateCoupon;
-                
+                const updatedCoupon = data.updateCoupon;
+
                 updateCoupon.valid_from = convertToHTMLDate(new Date(updatedCoupon.valid_from * 1));
                 updateCoupon.valid_until = convertToHTMLDate(new Date(updatedCoupon.valid_until * 1));
 
@@ -342,16 +371,10 @@ export default function CouponPage() {
                     )
                 );
 
-                setIsModalOpen(false);
-                setEditingCoupon(null);
-                setSelectedProducts([]);
-                setSelectedCategories([]);
-                setSelectedSubcategories([]);
-
-                setEditLoading(false);
+                resetModel(); // Reset the modal states
             } else {
-                console.error('Error updating coupon:', response.error);
-                throw new Error(response.error.status);
+                console.error('Error updating coupon:', data.error);
+                throw new Error(data.error.status);
             }
 
             // Close the modal and reset states
@@ -363,49 +386,64 @@ export default function CouponPage() {
         }
     };
 
-    const validateForm = () => {
+    const validateForm = (formData) => {
+        console.log("______Validate Form______");
         const errors = {};
     
+        console.log('formData:', formData);
+    
         // Code validation
-        if (!newCoupon.code) {
+        if (!formData.code) {
             errors.code = 'Code is required.';
-        } else if (newCoupon.code.length < 5) {
+        } else if (formData.code.length < 5) {
             errors.code = 'Code must be at least 5 characters long.';
-        } else if (!isNaN(newCoupon.code)) {
+        } else if (!isNaN(formData.code)) {
             errors.code = 'Code must not be a number.';
         }
     
         // Description validation
-        if (!newCoupon.description) {
+        if (!formData.description) {
             errors.description = 'Description is required.';
-        } else if (!isNaN(newCoupon.description)) {
+        } else if (!isNaN(formData.description)) {
             errors.description = 'Description must not be a number.';
         }
     
-        // Discount, Max Discount, and Minimum Order Amount validation
-        [['discount', 'Discount'], ['max_discount', 'Max Discount'], ['min_order_amount', 'Min Order Amount']].forEach((field) => {
-            if (!newCoupon[field[0]]) {
-                errors[field[0]] = `${field[1].replace(/_/g, ' ')} is required.`;
-            } else if (isNaN(newCoupon[field[0]])) {
-                errors[field[0]] = `${field[1].replace(/_/g, ' ')} must be a number.`;
+        // Discount, Minimum Order Amount validation
+        [['discount', 'Discount'], ['min_order_amount', 'Min Order Amount']].forEach((field) => {
+            if (!formData[field[0]]) {
+                errors[field[0]] = `${field[1]} is required.`;
+            } else if (isNaN(formData[field[0]])) {
+                errors[field[0]] = `${field[1]} must be a number.`;
+            } else if (formData[field[0]] < 0) {
+                errors[field[0]] = `${field[1]} can't be negative.`;
             }
         });
     
+        // Max Discount validation (only if type is not FIXED)
+        if (formData.type !== 'FIXED') {
+            if (!formData.max_discount) {
+                errors.max_discount = 'Max Discount is required.';
+            } else if (isNaN(formData.max_discount)) {
+                errors.max_discount = 'Max Discount must be a number.';
+            } else if (formData.max_discount < 0) {
+                errors.max_discount = "Max Discount can't be negative.";
+            }
+        }
+    
         // Usage Limit and Max Use Per User validation
-        ['usage_limit', 'max_use_per_user'].forEach((field) => {
-            if (!newCoupon[field]) {
-                errors[field] = `${field.replace(/_/g, ' ')} is required.`;
-            } else if (isNaN(newCoupon[field])) {
-                errors[field] = `${field.replace(/_/g, ' ')} must be a number.`;
+        [['usage_limit', 'Usage Limit'], ['max_use_per_user', 'Max Use Per User']].forEach((field) => {
+            if (!formData[field[0]]) {
+                errors[field[0]] = `${field[1]} is required.`;
+            } else if (isNaN(formData[field[0]])) {
+                errors[field[0]] = `${field[1]} must be a number.`;
             }
         });
-
-
+    
         // Valid From and Valid Until validation
-        if (!newCoupon.valid_from) {
+        if (!formData.valid_from) {
             errors.valid_from = 'Valid From date is required.';
         }
-        if (!newCoupon.valid_until) {
+        if (!formData.valid_until) {
             errors.valid_until = 'Valid Until date is required.';
         }
     
@@ -423,21 +461,23 @@ export default function CouponPage() {
         return errors;
     };
     
-    
-    
+
+
+
 
 
 
     // Create or Update Coupon
     const handleCreateOrUpdate = (event) => {
         event.preventDefault();
+        const formData = editingCoupon ? editingCoupon : newCoupon;
 
-        const errors = validateForm();
-    if (Object.keys(errors).length > 0) {
-        setFormErrors(errors); // Set errors to state to display them
-        return;
-    }
-
+        const errors = validateForm(formData);
+        console.log('Errors:', errors);
+        if (Object.keys(errors).length > 0) {
+            setFormErrors(errors); // Set errors to state to display them
+            return;
+        }
 
         if (editingCoupon) {
             updateCoupon();
@@ -458,6 +498,12 @@ export default function CouponPage() {
     };
 
     const resetModel = () => {
+
+        console.log("Reseting Model");
+        console.log("isModalOpen", isModalOpen);
+        
+        setFormErrors({});
+        setIsModalOpen(false);
         setNewCoupon(newCouponTemplate);
         setEditingCoupon(null);
         setEditingCouponId(null);
@@ -468,49 +514,45 @@ export default function CouponPage() {
 
 
     const toggleModal = async (coupon = null) => {
-
         // Fetch Products, Categories, Subcategories for the first time only
-        if (!selectedProducts.length || !selectedCategories.length || !selectedSubcategories.length) {
-            fetchPCSData();
+        if (!products.length || !categories.length || !subcategories.length) {
+            await fetchPCSData();
         }
-
+    
         if (coupon) {
-
             // Set the date fields
             coupon.valid_from = convertToHTMLDate(new Date(coupon.valid_from * 1));
             coupon.valid_until = convertToHTMLDate(new Date(coupon.valid_until * 1));
-
-            // Set the selected products, categories, subcategories formate {value: id, label: name}
+    
+            // Set the selected products, categories, subcategories in the format {value: id, label: name}
             const selectedProducts = coupon.applicable_products.map((product) => ({
                 value: product.id,
                 label: product.name,
             }));
-
+    
             const selectedCategories = coupon.applicable_categories.map((category) => ({
                 value: category.id,
                 label: category.name,
             }));
-
+    
             const selectedSubcategories = coupon.applicable_subcategories.map((subCategory) => ({
                 value: subCategory.id,
                 label: subCategory.name,
             }));
+    
+            setEditingCoupon(coupon);
+            setEditingCouponId(coupon.id);
             setSelectedProducts(selectedProducts);
             setSelectedCategories(selectedCategories);
             setSelectedSubcategories(selectedSubcategories);
-
-            console.log('Selected Products:', selectedProducts);
-            console.log('Selected Categories:', selectedCategories);
-            console.log('Selected Subcategories:', selectedSubcategories);
-
-
-            setEditingCoupon(coupon);
-            setEditingCouponId(coupon.id);
         } else {
+            console.log("Reseting Model");
             resetModel();
         }
+    
         setIsModalOpen(!isModalOpen);
-    }
+    };
+    
 
     const openDeleteModal = (id) => {
         setIsDeleteModalOpen(true);
@@ -619,7 +661,7 @@ export default function CouponPage() {
                             <button
                                 type="button"
                                 className="text-gray-500 dark:text-neutral-400"
-                                onClick={() => toggleModal(null)}
+                                onClick={() => toggleModal()}
                             >
                                 <svg
                                     className="w-5 h-5"
@@ -646,8 +688,9 @@ export default function CouponPage() {
                                         id="coupon-code"
                                         className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400"
                                         placeholder="Coupon Code"
-                                        value={editingCoupon ? editingCoupon.code : newCoupon.code}
+                                        value={editingCoupon ? editingCoupon.code : newCoupon.code || ''}
                                         onChange={handleInputChange}
+                                        readOnly={!!editingCoupon} 
 
                                     />
                                     {formErrors.code && <p className="text-red-500 text-sm">{formErrors.code}</p>}
@@ -663,13 +706,12 @@ export default function CouponPage() {
                                         id="coupon-description"
                                         className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400"
                                         placeholder="Description"
-                                        value={editingCoupon ? editingCoupon.description : newCoupon.description}
+                                        value={editingCoupon ? editingCoupon.description : newCoupon.description || ''}
                                         onChange={handleInputChange}
 
                                     />
-                                    {formErrors.code && <p className="text-red-500 text-sm">{formErrors.description}</p>}
+                                    {formErrors.description && <p className="text-red-500 text-sm">{formErrors.description}</p>}
                                 </div>
-
                                 {/* Type */}
                                 <div>
                                     <label htmlFor="coupon-type" className="block text-sm font-medium mb-2 dark:text-white">
@@ -679,9 +721,8 @@ export default function CouponPage() {
                                         name="type"
                                         id="coupon-type"
                                         className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400"
-                                        value={editingCoupon ? editingCoupon.type : newCoupon.type}
+                                        value={editingCoupon ? editingCoupon.type : newCoupon.type || ''}
                                         onChange={handleInputChange}
-
                                     >
                                         {couponTypes.map((type) => (
                                             <option key={type} value={type}>
@@ -689,11 +730,16 @@ export default function CouponPage() {
                                             </option>
                                         ))}
                                     </select>
-                                    {formErrors.code && <p className="text-red-500 text-sm">{formErrors.type}</p>}
+                                    {formErrors.type && <p className="text-red-500 text-sm">{formErrors.type}</p>}
                                 </div>
 
                                 {/* Discount Fields */}
-                                <div className="grid grid-cols-2 gap-4">
+                                {/* Discount Fields */}
+                                <div
+                                    className={`grid gap-4 ${(editingCoupon ? editingCoupon.type : newCoupon.type) === "FIXED" ? "grid-cols-1" : "grid-cols-2"
+                                        }`}
+                                >
+                                    {/* Discount Field */}
                                     <div>
                                         <label htmlFor="coupon-discount" className="block text-sm font-medium mb-2 dark:text-white">
                                             Discount
@@ -703,30 +749,34 @@ export default function CouponPage() {
                                             name="discount"
                                             id="coupon-discount"
                                             className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400"
-                                            placeholder="Discount %"
-                                            value={editingCoupon ? editingCoupon.discount : newCoupon.discount}
+                                            placeholder={"Discount " + (editingCoupon ? editingCoupon.type : newCoupon.type === "FIXED" ? "Amount" : "Percentage")}
+                                            value={editingCoupon ? editingCoupon.discount : newCoupon.discount || ''}
                                             onChange={handleInputChange}
-
                                         />
-                                        {formErrors.code && <p className="text-red-500 text-sm">{formErrors.discount}</p>}
+                                        {formErrors.discount && <p className="text-red-500 text-sm">{formErrors.discount}</p>}
                                     </div>
-                                    <div>
-                                        <label htmlFor="coupon-max-discount" className="block text-sm font-medium mb-2 dark:text-white">
-                                            Max Discount
-                                        </label>
-                                        <input
-                                            type="text"
-                                            name="max_discount"
-                                            id="coupon-max-discount"
-                                            className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400"
-                                            placeholder="Max Discount"
-                                            value={editingCoupon ? editingCoupon.max_discount : newCoupon.max_discount}
-                                            onChange={handleInputChange}
 
-                                        />
-                                        {formErrors.code && <p className="text-red-500 text-sm">{formErrors.max_discount}</p>}
-                                    </div>
+                                    {/* Conditionally render Max Discount */}
+                                    {(editingCoupon ? editingCoupon.type : newCoupon.type) !== "FIXED" && (
+                                        <div>
+                                            <label htmlFor="coupon-max-discount" className="block text-sm font-medium mb-2 dark:text-white">
+                                                Max Discount
+                                            </label>
+                                            <input
+                                                type="text"
+                                                name="max_discount"
+                                                id="coupon-max-discount"
+                                                className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400"
+                                                placeholder="Max Discount"
+                                                value={editingCoupon ? editingCoupon.max_discount : newCoupon.max_discount || ''}
+                                                onChange={handleInputChange}
+                                            />
+                                            {formErrors.max_discount && <p className="text-red-500 text-sm">{formErrors.max_discount}</p>}
+                                        </div>
+                                    )}
                                 </div>
+
+
 
 
                                 {/* Min Order Amount */}
@@ -740,11 +790,11 @@ export default function CouponPage() {
                                         id="coupon-min-order-amount"
                                         className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400"
                                         placeholder="Minimum Order Amount"
-                                        value={editingCoupon ? editingCoupon.min_order_amount : newCoupon.min_order_amount}
+                                        value={editingCoupon ? editingCoupon.min_order_amount : newCoupon.min_order_amount || ''}
                                         onChange={handleInputChange}
 
                                     />
-                                    {formErrors.code && <p className="text-red-500 text-sm">{formErrors.min_order_amount}</p>}
+                                    {formErrors.min_order_amount && <p className="text-red-500 text-sm">{formErrors.min_order_amount}</p>}
                                 </div>
 
                                 {/* Applicable Products */}
@@ -757,13 +807,13 @@ export default function CouponPage() {
                                             label: product.name,
                                         }))
                                         }
-                                        value={selectedProducts}
+                                        value={selectedProducts || []}
                                         onChange={(selectedProducts) => handleSelect(selectedProducts, 'product')}
                                         className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400"
                                         classNamePrefix="select"
                                         placeholder="Select applicable products"
                                     />
-                                    {formErrors.code && <p className="text-red-500 text-sm">{formErrors.applicable_products}</p>}
+                                    {formErrors.applicable_products && <p className="text-red-500 text-sm">{formErrors.applicable_products}</p>}
                                 </div>
 
                                 {/* Applicable Categories */}
@@ -776,13 +826,13 @@ export default function CouponPage() {
                                             label: category.name,
                                         }))
                                         }
-                                        value={selectedCategories}
+                                        value={selectedCategories || []}
                                         onChange={(selectedCategories) => handleSelect(selectedCategories, 'category')}
                                         className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400"
                                         classNamePrefix="select"
                                         placeholder="Select applicable categories"
                                     />
-                                    {formErrors.code && <p className="text-red-500 text-sm">{formErrors.applicable_categories}</p>}
+                                    {formErrors.applicable_categories && <p className="text-red-500 text-sm">{formErrors.applicable_categories}</p>}
                                 </div>
 
                                 {/* Applicable SubCategories */}
@@ -795,13 +845,13 @@ export default function CouponPage() {
                                             label: subCategory.name,
                                         }))
                                         }
-                                        value={selectedSubcategories}
+                                        value={selectedSubcategories || []}
                                         onChange={(selectedSubcategories) => handleSelect(selectedSubcategories, 'subcategory')}
                                         className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400"
                                         classNamePrefix="select"
                                         placeholder="Select applicable subcategories"
                                     />
-                                    {formErrors.code && <p className="text-red-500 text-sm">{formErrors.applicable_subcategories}</p>}
+                                    {formErrors.applicable_subcategories && <p className="text-red-500 text-sm">{formErrors.applicable_subcategories}</p>}
                                 </div>
 
                                 {/* Validity Dates */}
@@ -815,11 +865,11 @@ export default function CouponPage() {
                                             name="valid_from"
                                             id="coupon-valid-from"
                                             className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400"
-                                            value={editingCoupon ? editingCoupon.valid_from : newCoupon.valid_from}
+                                            value={editingCoupon ? editingCoupon.valid_from : newCoupon.valid_from || ''}
                                             onChange={handleInputChange}
 
                                         />
-                                        {formErrors.code && <p className="text-red-500 text-sm">{formErrors.valid_from}</p>}
+                                        {formErrors.valid_from && <p className="text-red-500 text-sm">{formErrors.valid_from}</p>}
                                     </div>
                                     <div>
                                         <label htmlFor="coupon-valid-until" className="block text-sm font-medium mb-2 dark:text-white">
@@ -830,11 +880,11 @@ export default function CouponPage() {
                                             name="valid_until"
                                             id="coupon-valid-until"
                                             className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400"
-                                            value={editingCoupon ? editingCoupon.valid_until : newCoupon.valid_until}
+                                            value={editingCoupon ? editingCoupon.valid_until : newCoupon.valid_until || ''}
                                             onChange={handleInputChange}
 
                                         />
-                                        {formErrors.code && <p className="text-red-500 text-sm">{formErrors.valid_until}</p>}
+                                        {formErrors.valid_until && <p className="text-red-500 text-sm">{formErrors.valid_until}</p>}
                                     </div>
                                 </div>
 
@@ -849,10 +899,10 @@ export default function CouponPage() {
                                         id="coupon-usages-limit"
                                         className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400"
                                         placeholder="Total Usages Limit"
-                                        value={editingCoupon ? editingCoupon.usage_limit : newCoupon.usage_limit}
+                                        value={editingCoupon ? editingCoupon.usage_limit : newCoupon.usage_limit || ''}
                                         onChange={handleInputChange}
                                     />
-                                    {formErrors.code && <p className="text-red-500 text-sm">{formErrors.usage_limit}</p>}
+                                    {formErrors.usage_limit && <p className="text-red-500 text-sm">{formErrors.usage_limit}</p>}
                                 </div>
 
                                 {/* Max Use Per User */}
@@ -866,14 +916,14 @@ export default function CouponPage() {
                                         id="coupon-max-use-per-user"
                                         className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400"
                                         placeholder="Max Use Per User"
-                                        value={editingCoupon ? editingCoupon.max_use_per_user : newCoupon.max_use_per_user}
+                                        value={editingCoupon ? editingCoupon.max_use_per_user : newCoupon.max_use_per_user || ''}
                                         onChange={handleInputChange}
                                     />
-                                    {formErrors.code && <p className="text-red-500 text-sm">{formErrors.max_use_per_user}</p>}
+                                    {formErrors.max_use_per_user && <p className="text-red-500 text-sm">{formErrors.max_use_per_user}</p>}
                                 </div>
 
 
-                            
+
 
 
                                 <div className="flex justify-end">

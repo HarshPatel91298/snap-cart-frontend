@@ -26,10 +26,10 @@ export const fetchGraphQLData = async (query, variables = {}) => {
     const data = await graphQLClient.request(query, variables);
     console.log("Response : ", data);
     console.log("------------------------------------------");
-    return { data, error: null };
+    return data
   } catch (error) {
     console.error("Error fetching data: ", error);
     // Return error without throwing
-    return { data: null, error };
+    return { error };
   }
 };

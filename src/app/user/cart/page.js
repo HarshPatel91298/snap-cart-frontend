@@ -4,92 +4,27 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { UserAuth } from '@/context/AuthContext';
-import { useEffect, useState } from 'react';
-import { fetchGraphQLData } from '@/lib/graphqlClient';
-import { gql } from 'graphql-request';
+import { useCart } from '@/context/CartContext';
+import { useRouter } from 'nextjs-toploader/app';
 
-// GraphQL Queries
-const QUERY_GET_PRODUCT = gql`
-  query Query($product_id: ID!) {
-    products(id: $product_id) {
-      id
-      name
-      description
-      price
-      color
-      brand_id
-      category_id
-      sub_category_id
-      display_image
-    }
-  }
-`;
 
-const QUERY_GET_ATTACHMENT_BY_ID = gql`
-  query AttachmentById($attachmentByIdId: ID!) {
-    attachmentById(id: $attachmentByIdId) {
-      data {
-        url
-      }
-    }
-  }
-`;
 
 export default function Cart() {
-  const { user, redirectURL, setRedirectURL } = UserAuth();
-  const [cart, setCart] = useState([]);
-  const [cartProducts, setCartProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { user, setRedirectURL } = UserAuth();
+  const { addToCart, reduceQty, deleteItemFromCart, cartProducts, setCartProducts, subTotal, tax, total, cartLoading } = useCart();
 
-  // Fetch cart from localStorage or API
-  useEffect(() => {
-    const cartData = JSON.parse(localStorage.getItem('cart')) || [];
-    setCart(cartData);
-    fetchProducts(cartData);
+  const router = useRouter();
 
-    // Redirect to /order/checkout if user is not logged
-    if (!user && !redirectURL) {
+  const handleCheckout = () => {
+    if (!user) {
       setRedirectURL('/user/order/checkout');
+      router.push('/user/login');
+    } else {
+      setRedirectURL(null);
+      router.push('/user/order/checkout');
     }
-  }, []);
+  }
 
-  // Fetch product details and their images
-  const fetchProducts = async (products) => {
-    try {
-      const fetchedProducts = await Promise.all(
-        products.map(async (product) => {
-          const productData = await fetchGraphQLData(QUERY_GET_PRODUCT, { product_id: product.product_id });
-          if (productData?.products?.length > 0) {
-            const productDetails = productData.products[0];
-            const imageResponse = await fetchGraphQLData(QUERY_GET_ATTACHMENT_BY_ID, {
-              attachmentByIdId: productDetails.display_image,
-            });
-            productDetails.display_image_url = imageResponse?.attachmentById?.data?.url || '/placeholder-image.png';
-            productDetails.quantity = product.quantity;
-            return productDetails;
-          }
-          return null;
-        })
-      );
-      setCartProducts(fetchedProducts.filter((item) => item !== null));
-      setLoading(false);
-    } catch (error) {
-      console.error('Error fetching products:', error);
-      setLoading(false);
-    }
-  };
-
-  // Calculate Order Summary
-  const calculateOrderSummary = () => {
-    const subtotal = cartProducts.reduce((acc, item) => acc + item.price * item.quantity, 0);
-    const tax = subtotal * 0.1; // Example tax: 10%
-    const saleDiscount = 20; // Example sale discount
-    const total = subtotal + tax - saleDiscount;
-
-    return { subtotal, tax, saleDiscount, total };
-  };
-
-  const { subtotal, tax, saleDiscount, total } = calculateOrderSummary();
 
   return (
     <div className="min-h-screen bg-white dark:bg-[#0a0a0a] py-10 flex justify-center">
@@ -97,7 +32,7 @@ export default function Cart() {
         {/* Shopping Bag Section */}
         <div className="lg:w-3/5">
           <h1 className="text-2xl font-bold mb-8 dark:text-neutral-200">Shopping Bag</h1>
-          {loading ? (
+          {cartLoading ? (
             <p className="text-center dark:text-neutral-400">Loading...</p>
           ) : cartProducts.length > 0 ? (
             cartProducts.map((product) => (
@@ -114,33 +49,60 @@ export default function Cart() {
                   <p className="text-sm text-gray-500 dark:text-neutral-400 mb-1">${product.price}</p>
                   <div className="flex items-center">
                     <span>Quantity:</span>
-                    <select
-                      className="ml-2 px-3 py-1 border rounded-lg"
-                      value={product.quantity}
-                      onChange={(e) =>
-                        setCartProducts((prev) =>
-                          prev.map((item) =>
-                            item.id === product.id
-                              ? { ...item, quantity: parseInt(e.target.value) }
-                              : item
-                          )
-                        )
-                      }
-                    >
-                      {[...Array(10)].map((_, idx) => (
-                        <option key={idx} value={idx + 1}>
-                          {idx + 1}
-                        </option>
-                      ))}
-                    </select>
+                    <div className="flex items-center">
+                      {/* Minus button */}
+                      <button
+                        className="w-8 h-8 bg-gray-200 text-gray-700 rounded-lg"
+                        onClick={() => {
+                          if (product.quantity > 1) {
+                            reduceQty(product.id , 1);
+                            setCartProducts((prev) =>
+                              prev.map((item) =>
+                                item.id === product.id
+                                  ? { ...item, quantity: item.quantity - 1 }
+                                  : item
+                              )
+                            );
+                          }
+                        }}
+                      >
+                        -
+                      </button>
+
+                      {/* Quantity display */}
+                      <span className="mx-2">{product.quantity}</span>
+
+                      {/* Plus button */}
+                      <button
+                        className="w-8 h-8 bg-gray-200 text-gray-700 rounded-lg"
+                        onClick={() => {
+                          addToCart([{product_id : product.id, quantity : 1}]);
+                          setCartProducts((prev) =>
+                            prev.map((item) =>
+                              item.id === product.id
+                                ? { ...item, quantity: item.quantity + 1 }
+                                : item
+                            )
+                          );
+                        }}
+                      >
+                        +
+                      </button>
+                    </div>
                   </div>
                   <button
                     className="text-sm text-indigo-600 hover:underline mt-2"
-                    onClick={() => setCartProducts((prev) => prev.filter((item) => item.id !== product.id))}
+                    onClick={() => {
+                      deleteItemFromCart(product.id);
+                      setCartProducts((prev) =>
+                        prev.filter((item) => item.id !== product.id)
+                      );
+                    }}
                   >
                     Remove
                   </button>
                 </div>
+
               </div>
             ))
           ) : (
@@ -155,7 +117,7 @@ export default function Cart() {
             <div className="space-y-4">
               <div className="flex justify-between">
                 <span className="text-sm">Subtotal</span>
-                <span className="text-sm">${subtotal.toFixed(2)}</span>
+                <span className="text-sm">${subTotal ? subTotal.toFixed(2) : '0.00'}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-sm">Shipping</span>
@@ -163,33 +125,42 @@ export default function Cart() {
               </div>
               <div className="flex justify-between">
                 <span className="text-sm">Tax</span>
-                <span className="text-sm">${tax.toFixed(2)}</span>
+                <span className="text-sm">${tax ? tax.toFixed(2) : '0.00'}</span>
               </div>
-              <div className="flex justify-between">
+              {/* <div className="flex justify-between">
                 <span className="text-sm">Sale Discount</span>
                 <span className="text-sm">-${saleDiscount.toFixed(2)}</span>
-              </div>
+              </div> */}
               <div className="flex justify-between">
                 <span className="text-sm dark:text-neutral-200">
                   Promo code
                 </span>
                 <button className="text-sm text-indigo-600 hover:underline dark:text-indigo-400">
-                  Enter code
+                  {user ? 'Apply' : 'Login to Apply'}
                 </button>
               </div>
               <div className="flex justify-between font-semibold">
                 <span className="text-base">Total</span>
-                <span className="text-base">${total.toFixed(2)}</span>
+                <span className="text-base">${total ? total.toFixed(2) : '0.00'}</span>
               </div>
             </div>
-            <Link href={user ? '/user/order/checkout' : '/user/login'}>
-              <button className="mt-6 w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700">
+              <button 
+              className="mt-6 w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700"
+              onClick={handleCheckout}
+              >
                 {user ? 'Proceed to Checkout' : 'Login to Checkout'}
               </button>
-            </Link>
           </div>
         </div>
       </div>
     </div>
   );
 }
+
+
+
+
+
+
+
+
