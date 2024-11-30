@@ -1,11 +1,20 @@
-import React from "react";
+import React,{ useEffect , useState } from "react";
 import { PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
 require("dotenv").config();
 
+import { useRouter } from 'nextjs-toploader/app';
+import { useCart } from "../../../context/CartContext";
 
-export default function CheckoutForm({ dpmCheckerLink }) {
+
+export default function CheckoutForm({ total }) {
+
+  const { cart_id, selectedAddressID  } = useCart();
+
+
+
   const stripe = useStripe();
   const elements = useElements();
+  const router = useRouter();
 
   const [message, setMessage] = React.useState(null);
   const [isLoading, setIsLoading] = React.useState(false);
@@ -26,7 +35,7 @@ export default function CheckoutForm({ dpmCheckerLink }) {
       elements,
       confirmParams: {
         // Change this to your payment completion page
-        return_url: `${FRONTEND_DOMAIN}/user/order/payment/payment-process`,
+        return_url: `${FRONTEND_DOMAIN}/user/order/confirmation?address_id=${selectedAddressID}&cart_id=${cart_id}`,
       },
     });
 
@@ -52,7 +61,7 @@ export default function CheckoutForm({ dpmCheckerLink }) {
           className={`w-full py-3 mt-3 text-lg font-semibold text-white rounded-lg transition-all ${isLoading || !stripe || !elements ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"}`}
         >
           <span id="button-text">
-            {isLoading ? <div className="spinner" id="spinner"></div> : "Pay now"}
+            {isLoading ? <div className="spinner" id="spinner"></div> : `Pay $${total}`}
           </span>
         </button>
 

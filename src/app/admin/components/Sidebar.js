@@ -10,7 +10,10 @@ import {
 import Image from "next/image";
 import { cn } from "../../../lib/utils";
 
+
 export function SidebarDemo({ children }) {
+
+  
   const links = [
     {
       label: "Dashboard",
@@ -70,6 +73,13 @@ export function SidebarDemo({ children }) {
       ),
     },
     {
+      label: "Coupons",
+      href: "/admin/coupon",
+      icon: (
+        <IconUserBolt className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
+      ),
+    },
+    {
       label: "Settings",
       href: "#",
       icon: (
@@ -78,7 +88,7 @@ export function SidebarDemo({ children }) {
     },
     {
       label: "Logout",
-      href: "#",
+      href: "/admin/logout",
       icon: (
         <IconArrowLeft className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
       ),

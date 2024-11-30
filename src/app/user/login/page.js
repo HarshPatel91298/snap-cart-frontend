@@ -5,9 +5,12 @@ import { useState, useEffect } from "react";
 import { useRouter } from 'nextjs-toploader/app';
 import Link from 'next/link'
 
+
+
 export default function page() {
   const router = useRouter();
-  const { user, googleSignIn, emailandPasswordSignIn } = UserAuth();
+  const { user, googleSignIn, emailandPasswordSignIn, redirectURL } = UserAuth();
+
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -15,6 +18,8 @@ export default function page() {
   const [emailError, setEmailError] = useState(""); // Error state for email
   const [passwordError, setPasswordError] = useState(""); // Error state for password
   const [errorMessage, setErrorMessage] = useState(""); // General error message
+
+
 
 
   // Redirect to home page if user is already signed in
@@ -53,12 +58,24 @@ export default function page() {
     return valid;
   };
 
+  const handleRedirect = async () => {
+    if (redirectURL) {
+      console.log({redirectURL});
+      router.push(redirectURL);
+    } else {
+      router.push('/');
+    }
+  };
+
   const handleGoogleSignIn = async () => {
     try {
-      await googleSignIn();
+      await googleSignIn().then(async (response) => {
+        await handleRedirect();
+      }
+      );
       setResponseMessage("Google sign-in successful!");
       setErrorMessage(""); // Clear any previous error message
-      router.push('/');
+      
     } catch (error) {
       console.log(error);
     }
@@ -77,7 +94,7 @@ export default function page() {
       if (response?.success) {
         setResponseMessage("Sign-in successful!");
         setErrorMessage(""); // Clear any previous error message
-        router.push('/');
+        handleRedirect();
       } else {
         // Display a user-friendly message based on errorCode
         switch (response?.errorCode) {

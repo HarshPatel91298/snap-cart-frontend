@@ -6,10 +6,12 @@ export default function NavBar() {
 
   const routes = [
     { label: 'Brand', path: '/admin/brand' },
-    { label: 'Category', path: '/admin/category' },
-    { label: 'Subcategory', path: '/admin/subcategory' },
-    { label: 'Warehouse', path: '/admin/warehouse' },
-    { label: 'Product', path: '/admin/product' },
+    // { label: 'Category', path: '/admin/category' },
+    // { label: 'Subcategory', path: '/admin/subcategory' },
+    // { label: 'Warehouse', path: '/admin/warehouse' },
+    // { label: 'Product', path: '/admin/product' },
+    // { label: 'Coupon', path: '/admin/coupon' },
+    // { label: 'Order', path: '/admin/order' },
   ];
 
   return (

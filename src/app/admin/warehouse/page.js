@@ -6,7 +6,6 @@ import { UserAuth } from '../../../context/AuthContext';
 import Datatable from '../components/Datatable';
 import ConfirmationModal from '../components/ConfirmationModel';
 import Alert from '../components/Alert';
-import { set } from 'mongoose';
 
 
 const LIST_WAREHOUSES_QUERY = gql`
@@ -275,10 +274,6 @@ const WarehousePage = () => {
 
     }
 
-
-
-
-
     return (
 
         <div>
@@ -432,11 +427,9 @@ const WarehousePage = () => {
                             confirmText={archiveConfrimText}   // Optional
                             cancelText="Cancel"    // Optional
                         />
-
                     </div>
                 </div>
             </div>
-
 
             <Alert alerts={alerts} removeAlert={removeAlert} />
 
