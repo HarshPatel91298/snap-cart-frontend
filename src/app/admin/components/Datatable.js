@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Loader from './Loader';
 
 export default function Datatable({
     title = "Table",
@@ -32,8 +33,7 @@ export default function Datatable({
     useEffect(() => {
         let filtered = data;
 
-        // console.log({ columns });
-        console.log({ data });
+        console.log({ columns, data });
 
         // Apply filter if selected
         if (selectedFilter) {
@@ -70,6 +70,18 @@ export default function Datatable({
         return date;
     };
     
+    const isFunctionEmpty = (fn) => {
+
+        console.log(fn);
+        // Ensure it's a function
+        if (typeof fn !== 'function') return false;
+      
+        // Convert the function to a string and trim it
+        const fnString = fn.toString().replace(/\s/g, '');
+      
+        // Compare to an empty function string
+        return fnString === '()=>{}' || fnString === 'function(){}';
+      };
 
     // Hide pagination if the total records are less than 15
     const showPagination = filteredData.length > itemsPerPage;
@@ -84,8 +96,6 @@ export default function Datatable({
                     <p className="text-sm text-gray-600 dark:text-neutral-400">{description}</p>
                 </div>
 
-                
-               
                 {/* Search */}
                 <div className="py-3 w-1/3">
                     <div className="relative">
@@ -126,7 +136,7 @@ export default function Datatable({
                 
 
                 {/* Create Button */}
-                <div className="inline-flex gap-x-2">
+               {!isFunctionEmpty(onCreate) ? ( <div className="inline-flex gap-x-2">
                     <button
                         type="button"
                         className="py-3 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:bg-blue-700"
@@ -134,7 +144,7 @@ export default function Datatable({
                     >
                         Create {title}
                     </button>
-                </div>
+                </div>) : <div></div>}
             </div>
 
             {/* Table */}
@@ -158,7 +168,7 @@ export default function Datatable({
                     <tbody className="w-full bg-white divide-y divide-gray-200 dark:bg-neutral-800 dark:divide-neutral-700">
                         {loading ? (
                             <tr>
-                                <td colSpan={columns.length + 1} className="text-center py-4">Loading...</td>
+                                <Loader/>
                             </tr>
                         ) : (
                             (paginatedData && paginatedData.length > 0) ? (
@@ -213,12 +223,12 @@ export default function Datatable({
                                             >
                                                 Edit
                                             </button>
-                                            <button
+                                            {!isFunctionEmpty(onDelete) && <button
                                                 className="text-red-600 hover:text-red-900 dark:text-red-500 dark:hover:text-red-400 ml-4"
                                                 onClick={() => onDelete(row.id)}
                                             >
                                                 Delete
-                                            </button>
+                                            </button>}
                                         </td>
                                     </tr>
 

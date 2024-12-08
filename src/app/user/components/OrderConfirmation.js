@@ -5,7 +5,7 @@ import "jspdf-autotable";
 import { useRouter } from "nextjs-toploader/app";
 
 export const OrderConfirmation = ({ order }) => {
-  const { id, user_id, order_status, total_amount, orderLines, shipping_address } = order;
+  const { id, user_id, order_status, total_amount } = order;
   const router = useRouter();
 
   // Function to generate PDF

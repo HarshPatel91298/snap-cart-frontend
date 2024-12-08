@@ -107,7 +107,6 @@ const WarehousePage = () => {
     const { user } = UserAuth();
 
     // Alert
-
     const [alerts, setAlerts] = useState([]);
 
 
@@ -135,6 +134,7 @@ const WarehousePage = () => {
                 setLoading(true);
                 try {
                     const response = await fetchGraphQLData(LIST_WAREHOUSES_QUERY);
+                    console.log("HH response", response);
                     if (response?.listWarehouses?.status) {
                         setWarehouses(response.listWarehouses.data);
 

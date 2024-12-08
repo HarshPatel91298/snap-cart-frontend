@@ -52,7 +52,7 @@ export default function CheckoutForm({ total }) {
 
   return (
     <>
-      <form id="payment-form" onSubmit={handleSubmit} className="w-[70%] mx-auto">
+      <form id="payment-form" onSubmit={handleSubmit} className="w-[50%] mx-auto">
         <PaymentElement id="payment-element" options={paymentElementOptions} />
 
         <button
