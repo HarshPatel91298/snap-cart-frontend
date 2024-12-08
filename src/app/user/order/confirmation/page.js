@@ -43,19 +43,10 @@ export default function OrderConfirmationPage() {
       mutation Mutation($input: CreateOrderInput!) {
         createOrder(input: $input) {
           id
-          user_id
-          cart_id
           order_status
           order_date
-          orderLines {
-            id
-            product_id
-            quantity
-            price
-          }
           total_amount
           payment_method
-          address_id
           created_at
           updated_at
         }

@@ -1,8 +1,12 @@
 'use client';
 import React, { useState } from 'react';
 import { UserAuth } from '../../../context/AuthContext';
+import { useRouter } from 'nextjs-toploader/app';
 
 export default function AdminAuth() {
+
+  const router = useRouter();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -23,6 +27,7 @@ export default function AdminAuth() {
       if (!result.success) {
         setError(result.message);
       }
+      router.push('/admin/dashboard');
     } catch (error) {
       console.error('Error during authentication:', error);
       setError('An error occurred. Please try again.');

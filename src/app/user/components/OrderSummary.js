@@ -22,7 +22,9 @@ export const OrderSummary = () => {
       <div className="flex-1">
         <h3 className="font-medium text-gray-900">{item.name}</h3>
         <p className="text-gray-500 text-sm">
-          {item.description}
+          {item.description.length > 50
+            ? `${item.description.substring(0, 50)}...`
+            : item.description}
         </p>
         <p className="text-gray-500 text-sm">
           Color: {'Red'} • Size: {'M'} • Qty: {item.quantity}
