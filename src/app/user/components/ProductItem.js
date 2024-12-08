@@ -14,10 +14,10 @@ export default function ProductItem({ product }) {
       </Link>
       <div className="flex flex-col items-center justify-center mt-4">
         <Link href={`/product/${product.slug}`}>
-          <h2 className="text-lg font-semibold">{product.name}</h2>
+          <h2 className="text-lg font-semibold text-black">{product.name}</h2>
         </Link>
-        <p className="text-sm text-gray-500">{product.brand}</p>
-        <p className="text-lg font-bold mt-2">${product.price}</p>
+        <p className="text-sm text-black">{product.brand}</p>
+        <p className="text-lg font-bold mt-2 text-black">${product.price}</p>
         <button className="mt-4 bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">
           Add to Cart
         </button>

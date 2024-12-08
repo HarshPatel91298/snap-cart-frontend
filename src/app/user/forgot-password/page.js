@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { UserAuth } from "@/context/AuthContext";
+import { UserAuth } from "../../../context/AuthContext";
 import { useState } from "react";
 import { useRouter } from 'nextjs-toploader/app';
 
@@ -27,7 +27,7 @@ export default function Page() {
 
     try {
       await resetPassword(email);
-      router.push('/login');
+      router.push('/user/login');
     } catch (err) {
       setError("Error resetting password. Please try again.");
     }

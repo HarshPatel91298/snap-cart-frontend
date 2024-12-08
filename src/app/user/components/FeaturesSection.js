@@ -10,9 +10,10 @@ export default function FeaturesSection() {
     <div className="bg-gray-100 py-8">
       <div className="container mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
         {features.map((feature, index) => (
-          <div key={index} className="text-center">
+          <div key={index} className="text-center text-black">
+            {' '}
             <div className="text-4xl mb-2">{feature.icon}</div>
-            <p>{feature.text}</p>
+            <p className="text-black">{feature.text}</p>{' '}
           </div>
         ))}
       </div>
