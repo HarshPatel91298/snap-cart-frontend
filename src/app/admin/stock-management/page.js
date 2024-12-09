@@ -17,17 +17,6 @@ const LIST_PRODUCTS_QUERY = gql`
     }
 `;
 
-const GET_PRODUCT_BY_ID_QUERY = gql`
-    query GetProductById($productId: ID!) {
-         product(id: $productId) {
-            id
-            name
-            stock
-            sku
-            is_active
-        }
-    }   
-`;  
 
 const LIST_WAREHOUSES_QUERY = gql`
   query ListWarehouses {
@@ -47,22 +36,7 @@ const LIST_WAREHOUSES_QUERY = gql`
 `;
 
 
-const GET_WAREHOUSE_BY_ID_QUERY = gql`
-    query GetWarehouseById($warehouseId: ID!) {
-    getWarehouse(id: $warehouseId) {
-        status
-        data {
-        id
-        name
-        location
-        is_active
-        createdAt
-        updatedAt
-        }
-        message
-    }
-    }
-`;
+
 
 
 const LIST_STOCK_LOCATIONS_QUERY = gql`
@@ -82,39 +56,39 @@ const LIST_STOCK_LOCATIONS_QUERY = gql`
   }
 `;
 
-const GET_STOCK_LOCATION_BY_ID_QUERY = gql`
-    query GetStockLocationById($stockLocationId: ID!) {
-    getStockLocation(id: $stockLocationId) {
+
+
+const LIST_STOCK_QUERY = gql`
+    query ListStock {
+  listStock {
     status
     data {
       id
-      name
-      warehouse_id
-      is_active
+      product_id{
+        id
+        name
+        sku
+        is_active
+      }
+      warehouse_id {
+        id
+        name
+        location
+        is_active
+      }
+      stock_location_id {
+        id
+        name
+        warehouse_id
+        is_active
+      }
+      quantity
       createdAt
       updatedAt
     }
     message
   }
 }
-`;
-
-const LIST_STOCK_QUERY = gql`
-  query ListStock {
-    listStock {
-      status
-      data {
-        id
-        product_id
-        warehouse_id
-        stock_location_id
-        quantity
-        createdAt
-        updatedAt
-      }
-      message
-    }
-  }
 `;
 
 const CREATE_STOCK_MUTATION = gql`
@@ -124,9 +98,24 @@ const CREATE_STOCK_MUTATION = gql`
       message
       data {
         id
-        product_id
+         product_id{
+        id
+        name
+        sku
+        is_active
+      }
+      warehouse_id {
+        id
+        name
+        location
+        is_active
+      }
+      stock_location_id {
+        id
+        name
         warehouse_id
-        stock_location_id
+        is_active
+      }
         quantity
         createdAt
         updatedAt
@@ -142,9 +131,24 @@ const UPDATE_STOCK_MUTATION = gql`
       message
       data {
         id
-        product_id
+        product_id{
+        id
+        name
+        sku
+        is_active
+      }
+      warehouse_id {
+        id
+        name
+        location
+        is_active
+      }
+      stock_location_id {
+        id
+        name
         warehouse_id
-        stock_location_id
+        is_active
+      }
         quantity
         createdAt
         updatedAt
@@ -175,12 +179,14 @@ const StockManagementPage = () => {
     const [deleteStockId, setDeleteStockId] = useState(null);
     const [currentuser, setCurrentUser] = useState(null);
 
-    const [productId, setProductId] = useState('');
-    const [warehouseId, setWarehouseId] = useState('');
-    const [stockLocationId, setStockLocationId] = useState('');
+    // Form fields for creating/editing stock
+    const [productId, setProductId] = useState("");
+    const [warehouseId, setWarehouseId] = useState("");
+    const [stockLocationId, setStockLocationId] = useState("");
     const [quantity, setQuantity] = useState('');
     const [editingStockId, setEditingStockId] = useState(null);
 
+    // Fetch products, warehouses, and stock locations to list in the dropdown
     const [products, setProducts] = useState([]);
     const [warehouses, setWarehouses] = useState([]);
     const [stockLocations, setStockLocations] = useState([]);
@@ -201,21 +207,6 @@ const StockManagementPage = () => {
         }
     }
 
-    async function getProductById(productId) {
-        try {
-            const response = await fetchGraphQLData(GET_PRODUCT_BY_ID_QUERY, {
-                productId,
-            });
-            if (response?.product) {
-                return response.product; // Return the product to use in the next function
-            }
-            setError(response?.message || 'Error fetching product');
-        } catch (err) {
-            setError(err.message);
-        }
-    }
-
-
 
     async function fetchWarehouses() {
         try {
@@ -232,20 +223,7 @@ const StockManagementPage = () => {
         }
     }
 
-    async function getWarehouseById(warehouseId) {
-        try {
-            const response = await fetchGraphQLData(GET_WAREHOUSE_BY_ID_QUERY, {
-                warehouseId,
-            });
-            if (response?.getWarehouse?.status) {
-                return response.getWarehouse.data;
-            } else {
-                setError(response?.getWarehouse?.message || 'Error fetching warehouse');
-            }
-        } catch (err) {
-            setError(err.message);
-        }
-    }
+
 
     async function fetchStockLocations() {
         try {
@@ -262,57 +240,7 @@ const StockManagementPage = () => {
         }
     }
 
-    async function getStockLocationById(stockLocationId) {
-        try {
-            const response = await fetchGraphQLData(GET_STOCK_LOCATION_BY_ID_QUERY, {
-                stockLocationId,
-            });
-            if (response?.getStockLocation?.status) {
-                return response.getStockLocation.data;
-            } else {
-                setError(response?.getStockLocation?.message || 'Error fetching stock location');
-            }
-        } catch (err) {
-            setError(err.message);
-        }
-    }
-
-    // Set Warehouse, Stock Location, and Product to the stock data
-    async function setStockManagementData(stock, warehouses, stockLocations, products) {
-
-        const warehouseMap = warehouses.reduce((acc, warehouse) => {
-            acc[warehouse.id] = warehouse;
-            return acc;
-        }
-        , {});
-
-        const stockLocationMap = stockLocations.reduce((acc, stockLocation) => {
-            acc[stockLocation.id] = stockLocation;
-            return acc;
-        }
-        , {});
-
-        const productMap = products.reduce((acc, product) => {
-            acc[product.id] = product;
-            return acc;
-        }
-        , {});
-
-        console.log("Warehouse Map: ", warehouseMap);
-        console.log("Stock Location Map: ", stockLocationMap);
-        console.log("Product Map: ", productMap);
-
-        return stock.map((stockItem) => ({
-            ...stockItem,
-            warehouse: warehouseMap[stockItem.warehouse_id],
-            stockLocation: stockLocationMap[stockItem.stock_location_id],
-            product: productMap[stockItem.product_id],
-        }));
-
-    }
-
-
-
+    
     useEffect(() => {
         if (user) {
             setCurrentUser(user);
@@ -323,7 +251,8 @@ const StockManagementPage = () => {
                     const response = await fetchGraphQLData(LIST_STOCK_QUERY);
                     if (response?.listStock?.status) {
 
-                        const stock = response.listStock.data;
+                        const stocks = response.listStock.data;
+                        // console.log("Stock Management: ", stocks);
 
                         // Fetch warehouses
                         const warehouses = await fetchWarehouses();
@@ -337,14 +266,10 @@ const StockManagementPage = () => {
                         const products = await fetchProducts();
                         setProducts(products);
 
-                        // Set Warehouse, Stock Location, and Product to the stock data
-                        const updatedStockManagement = await setStockManagementData(stock, warehouses, stockLocations, products);
+                    
+                        
 
-                        console.log("Stock Management: ", updatedStockManagement);
-
-
-
-                        setStocks(updatedStockManagement);
+                        setStocks(stocks);
                     } else {
                         setError(response?.listStock?.message || 'Error fetching stock data');
                     }
@@ -359,7 +284,8 @@ const StockManagementPage = () => {
     }, [user]);
 
     const isProductAlreadyCreated = (productId) => {
-        return stocks.some((stock) => stock.product_id === productId);
+        console.log("Product ID $$: ", productId);
+        return stocks.filter((stock) => stock.product_id.id != productId.id).some((stock) => stock.product_id.id === productId.id);
     };
 
     const createStock = async (event) => {
@@ -369,6 +295,7 @@ const StockManagementPage = () => {
             setError('Product already exists in the stock data');
             return;
         }
+
         const stockInput = {
             product_id: productId,
             warehouse_id: warehouseId,
@@ -391,6 +318,8 @@ const StockManagementPage = () => {
                 const stockData = editingStockId 
                     ? response.updateStock.data 
                     : response.addStock.data;
+
+                // console.log("Stock Update or New Data: ", stockData);
     
                 // Assuming stockData contains the IDs for warehouse, stock location, and product
                 const updatedStockItem = {
@@ -439,10 +368,11 @@ const StockManagementPage = () => {
     const toggleModal = (stock = null) => {
         setIsModalOpen(!isModalOpen);
         if (stock) {
+            console.log("Edit Stock: ", stock);
             setEditingStockId(stock.id);
-            setProductId(stock.product_id);
-            setWarehouseId(stock.warehouse_id);
-            setStockLocationId(stock.stock_location_id);
+            setProductId(stock.product_id.id);
+            setWarehouseId(stock.warehouse_id.id);
+            setStockLocationId(stock.stock_location_id.id);
             setQuantity(stock.quantity);
         } else {
             setEditingStockId(null);
@@ -482,7 +412,7 @@ const StockManagementPage = () => {
                                     <button
                                         type="button"
                                         className="py-3 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:bg-blue-700"
-                                        onClick={toggleModal}
+                                        onClick={() => toggleModal()}
                                     >
                                         Create Stock
                                     </button>
@@ -530,7 +460,7 @@ const StockManagementPage = () => {
                                                             >
                                                                 <option value="">Select Product</option>
                                                                 {products.map((product) => (
-                                                                    <option key={product.id} value={product.id}>
+                                                                    <option key={product.id} value={product.id} selected={product.id === productId}>    
                                                                         {product.name}
                                                                     </option>
                                                                 ))}
@@ -551,7 +481,7 @@ const StockManagementPage = () => {
                                                             >
                                                                 <option value="">Select Warehouse</option>
                                                                 {warehouses.map((warehouse) => (
-                                                                    <option key={warehouse.id} value={warehouse.id}>
+                                                                    <option key={warehouse.id} value={warehouse.id} selected={warehouse.id === warehouseId}>
                                                                         {warehouse.name}
                                                                     </option>
                                                                 ))}
@@ -632,9 +562,9 @@ const StockManagementPage = () => {
                                     <tbody className="bg-white divide-y divide-gray-200 dark:bg-neutral-800 dark:divide-neutral-700">
                                         {stocks.map((stock) => (
                                             <tr key={stock.id}>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{stock.product.name}</td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-neutral-400">{stock.warehouse.name}</td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-neutral-400">{stock.stockLocation.name}</td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{stock.product_id.name}</td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-neutral-400">{stock.warehouse_id.name}</td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-neutral-400">{stock.stock_location_id.name}</td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-neutral-400">{stock.quantity}</td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-neutral-400">{formatDate(stock.createdAt)}</td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-neutral-400">{formatDate(stock.updatedAt)}</td>
