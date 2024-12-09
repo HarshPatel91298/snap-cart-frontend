@@ -1,7 +1,7 @@
-'use client';
+"use client";
 import { UserAuth } from "../../../context/AuthContext";
-import Link from 'next/link';
-import { useRouter } from 'nextjs-toploader/app';
+import Link from "next/link";
+import { useRouter } from "nextjs-toploader/app";
 import { useCart } from "@/context/CartContext";
 import { useEffect } from "react";
 
@@ -17,111 +17,107 @@ export default function NavBar() {
   const handleSignOut = async () => {
     try {
       await logout();
-      router.push('/');
+      router.push("/");
     } catch (error) {
-      console.log(error);
+      console.error("Logout Error: ", error);
     }
   };
 
   return (
-    <>
-      <header className="flex flex-wrap md:justify-start md:flex-nowrap z-50 w-full py-7">
-        <nav className="relative max-w-7xl w-full flex flex-wrap md:grid md:grid-cols-12 basis-full items-center px-4 md:px-6 md:px-8 mx-auto">
-          <div className="md:col-span-3">
-            {/* Logo */}
-            SnapCart
-          </div>
-          <div className="flex items-center gap-x-1 md:gap-x-2 ms-auto py-1 md:ps-6 md:order-3 md:col-span-3">
-            {/* Cart Icon with Badge */}
-            <div className="relative">
-              <Link href="/user/cart">
-                <div className="relative">
-                  <div className="absolute top-0 left-5">
-                    {
-                      cartItemCounter > 0 && (
-                        <p className="flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-xs text-white">
-                          {cartItemCounter || ''}
-                        </p>
-                      )
-                    }
-                  </div>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth="1.5"
-                    stroke="currentColor"
-                    className="h-6 w-6 text-black"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z"
-                    />
-                  </svg>
-                </div>
-              </Link>
-            </div>
+    <header className="flex w-full py-4 bg-white shadow-md z-50">
+      <nav className="container mx-auto flex items-center justify-between px-4 md:px-6">
+        {/* Logo */}
+        <div className="text-lg font-bold">
+          <Link href="/">SnapCart</Link>
+        </div>
 
-            {/* User Profile and Auth Buttons */}
-            {user ? (
-              <>
-                <div className="relative">
-                  <Link href="/user/profile/userdetails">
-                    <button type="button" className="flex items-center gap-x-2 text-sm font-medium rounded-xl bg-white border border-gray-200 text-black hover:bg-gray-100 focus:outline-none focus:bg-gray-100">
-                      {user.photoURL ? (
-                        <img className="w-8 h-8 rounded-full" src={user.photoURL} alt="User" />
-                      ) : (
-                        <img className="w-8 h-8 rounded-full" src="/images/male_user_8080.png" alt="User" />
-                      )}
-                    </button>
-                  </Link>
-                </div>
-                <button
-                  onClick={handleSignOut}
-                  className="py-2 px-3 text-sm font-medium rounded-xl bg-white border border-gray-200 text-black hover:bg-gray-100 focus:outline-none"
+        {/* Navigation Links */}
+        <div className="hidden md:flex gap-x-6">
+          <Link href="/" className="text-gray-700 hover:text-gray-900">
+            Home
+          </Link>
+          <Link href="/user/shop" className="text-gray-700 hover:text-gray-900">
+            Shop
+          </Link>
+          <Link href="/user/cart" className="text-gray-700 hover:text-gray-900">
+            Cart
+          </Link>
+          <Link
+            href="/user/about"
+            className="text-gray-700 hover:text-gray-900"
+          >
+            About
+          </Link>
+          <Link
+            href="/user/contact"
+            className="text-gray-700 hover:text-gray-900"
+          >
+            Contact
+          </Link>
+        </div>
+
+        {/* User Actions */}
+        <div className="flex items-center gap-x-4">
+          {/* Cart Icon with Badge */}
+          <div className="relative">
+            <Link href="/user/cart">
+              <div className="relative">
+                {cartItemCounter > 0 && (
+                  <span className="absolute -top-2 -right-2 flex items-center justify-center w-5 h-5 bg-red-500 text-white text-xs rounded-full">
+                    {cartItemCounter}
+                  </span>
+                )}
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth="1.5"
+                  stroke="currentColor"
+                  className="h-6 w-6 text-gray-700"
                 >
-                  Logout
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z"
+                  />
+                </svg>
+              </div>
+            </Link>
+          </div>
+
+          {/* User Profile and Auth Buttons */}
+          {user ? (
+            <>
+              <Link href="/user/profile/userdetails">
+                <img
+                  className="w-8 h-8 rounded-full border border-gray-300"
+                  src={user.photoURL || "/images/default_user.png"}
+                  alt="User"
+                />
+              </Link>
+              <button
+                onClick={handleSignOut}
+                className="py-2 px-4 text-sm font-medium text-white bg-red-500 rounded hover:bg-red-600"
+              >
+                Logout
+              </button>
+            </>
+          ) : (
+            <>
+              <Link href="/user/login">
+                <button className="py-2 px-4 text-sm font-medium text-gray-700 border border-gray-300 rounded hover:bg-gray-100">
+                  Login
                 </button>
-              </>
-            ) : (
-              <>
-                <Link href="/user/login">
-                  <button className="py-2 px-3 text-sm font-medium rounded-xl bg-white border border-gray-200 text-black hover:bg-gray-100 focus:outline-none">
-                    Login
-                  </button>
-                </Link>
-                <Link href="/user/signup">
-                  <button
-                    className="py-2 px-3 text-sm font-medium rounded-xl bg-lime-400 text-black hover:bg-lime-500 focus:outline-none"
-                  >
-                    Sign up
-                  </button>
-                </Link>
-              </>
-            )}
-          </div>
-          <div className="hs-collapse hidden md:block md:w-auto md:col-span-6">
-            <div className="flex flex-col gap-y-4 md:flex-row md:justify-center md:gap-x-7">
-              <Link href="/user" className="text-black hover:text-gray-600 dark:text-white">
-                Home
               </Link>
-              <Link href="/user/shop" className="text-black hover:text-gray-600 dark:text-white">
-                Shop
+              <Link href="/user/signup">
+                <button className="py-2 px-4 text-sm font-medium text-white bg-blue-500 rounded hover:bg-blue-600">
+                  Sign Up
+                </button>
               </Link>
-              <Link href="#" className="text-black hover:text-gray-600 dark:text-white">
-                Offers
-              </Link>
-              <Link href="#" className="text-black hover:text-gray-600 dark:text-white">
-                Careers
-              </Link>
-              <Link href="#" className="text-black hover:text-gray-600 dark:text-white">
-                About
-              </Link>
-            </div>
-          </div>
-        </nav>
-      </header>
-    </>
+            </>
+          )}
+        </div>
+      </nav>
+    </header>
   );
 }

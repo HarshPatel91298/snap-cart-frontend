@@ -1,88 +1,87 @@
 @keyframes moveTruck {
-    0% {
-      transform: translateX(-100%);
-    }
-    25% {
-      transform: translateX(-50%);
-    }
-    50% {
-      transform: translateX(0%);
-    }
-    75% {
-      transform: translateX(50%);
-    }
-    100% {
-      transform: translateX(100%);
-    }
+  0% {
+    transform: translateX(-100%);
   }
-  
-  @keyframes rotateWheels {
-    0% {
-      transform: rotate(0deg);
-    }
-    100% {
-      transform: rotate(360deg);
-    }
+  25% {
+    transform: translateX(-50%);
   }
-  .companyname{
-    font-size: 10px;
-    letter-spacing: 1px;
+  50% {
+    transform: translateX(0%);
   }
-  .truck-loader {
-    width: 8%;
-    margin-bottom: -40px;
-    margin-left: -6px;
-    z-index: 1;
-    position: relative;
-    overflow: hidden;
+  75% {
+    transform: translateX(50%);
   }
-  
-  .truck {
-    animation: moveTruck 2s infinite linear;
-    width: 6rem;
+  100% {
+    transform: translateX(100%);
   }
-  
-  .wheel1,
-  .wheel2 {
-    animation: rotateWheels 0.5s infinite linear;
+}
+
+@keyframes rotateWheels {
+  0% {
+    transform: rotate(0deg);
   }
-  
-  /* Road styles */
-  .road {
-    position: relative;
-    background-color: #4a4a4a;
-    width: 100%;
+  100% {
+    transform: rotate(360deg);
   }
-  
-  .stripe-container {
-    display: flex;
-    animation: moveStripes 2s infinite linear;
-    align-items: center;
-    justify-content: center;
+}
+.companyname{
+  font-size: 10px;
+  letter-spacing: 1px;
+}
+.truck-loader {
+  width: 8%;
+  margin-bottom: -40px;
+  margin-left: -6px;
+  z-index: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+.truck {
+  animation: moveTruck 2s infinite linear;
+  width: 6rem;
+}
+
+.wheel1,
+.wheel2 {
+  animation: rotateWheels 0.5s infinite linear;
+}
+
+/* Road styles */
+.road {
+  position: relative;
+  background-color: #4a4a4a;
+  width: 100%;
+}
+
+.stripe-container {
+  display: flex;
+  animation: moveStripes 2s infinite linear;
+  align-items: center;
+  justify-content: center;
+}
+
+.stripe {
+  height: 3px;
+  background-color: white;
+  margin-right: 4px;
+}
+
+/* Animation for road stripes */
+@keyframes moveStripes {
+  0% {
+    transform: translateX(100%);
   }
-  
-  .stripe {
-    height: 3px;
-    background-color: white;
-    margin-right: 4px;
+  25% {
+    transform: translateX(50%);
   }
-  
-  /* Animation for road stripes */
-  @keyframes moveStripes {
-    0% {
-      transform: translateX(100%);
-    }
-    25% {
-      transform: translateX(50%);
-    }
-    50% {
-      transform: translateX(0%);
-    }
-    75% {
-      transform: translateX(-50%);
-    }
-    100% {
-      transform: translateX(-100%);
-    }
+  50% {
+    transform: translateX(0%);
   }
-  
+  75% {
+    transform: translateX(-50%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}

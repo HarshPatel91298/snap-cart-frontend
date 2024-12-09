@@ -1,4 +1,4 @@
-'use client';
+"use client";
 import { useContext, createContext, useState, useEffect, use } from "react";
 import {
   signInWithPopup,
@@ -15,8 +15,7 @@ import {
   reauthenticateWithCredential,
 } from "firebase/auth";
 import { auth } from "../lib/firebase";
-import { fetchGraphQLData } from '../lib/graphqlClient';
-
+import { fetchGraphQLData } from "../lib/graphqlClient";
 
 const QUERY_GET_USER_BY_UID = `
   query Query($uid: String!) {
@@ -34,15 +33,12 @@ const QUERY_GET_USER_BY_UID = `
 // Create AuthContext
 const AuthContext = createContext();
 
-
 export const AuthContextProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [claims, setClaims] = useState(null);
   const [dbUser, setDBUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [redirectURL, setRedirectURL] = useState(null);
-
-
 
   const setDatabaseUser = async () => {
     try {
@@ -54,10 +50,9 @@ export const AuthContextProvider = ({ children }) => {
         }
       }
     } catch (error) {
-      console.error('Error setting database ID:', error);
+      console.error("Error setting database ID:", error);
     }
   };
-
 
   useEffect(() => {
     if (user) {
@@ -69,7 +64,6 @@ export const AuthContextProvider = ({ children }) => {
     }
   }, [user]);
 
-
   useEffect(() => {
     const setCustomClaims = async () => {
       // Wait until db_id and role are available in the claims
@@ -79,33 +73,34 @@ export const AuthContextProvider = ({ children }) => {
       // Otherwise, fetch claims
       await fetchClaims();
       // Add a delay to avoid rapid requests (e.g., 1-2 seconds)
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
     };
-  
-    if (user && !claims) { // Ensure it's only called when user is present and claims aren't already set
+
+    if (user && !claims) {
+      // Ensure it's only called when user is present and claims aren't already set
       setCustomClaims();
     }
   }, [user, claims]);
-  
+
   const fetchClaims = async () => {
     try {
       const user = auth.currentUser;
-  
+
       if (user) {
         // Force refresh the ID token to get updated claims
         const idToken = await user.getIdToken(true);
-  
+
         // Decode the ID token to access custom claims
         const decodedToken = await user.getIdTokenResult();
-        console.log('Custom Claims:', decodedToken.claims);
-  
+        console.log("Custom Claims:", decodedToken.claims);
+
         // Update claims state
         setClaims(decodedToken.claims);
       } else {
-        console.error('No authenticated user.');
+        console.error("No authenticated user.");
       }
     } catch (error) {
-      console.error('Error fetching custom claims:', error);
+      console.error("Error fetching custom claims:", error);
     }
   };
 
@@ -115,20 +110,18 @@ export const AuthContextProvider = ({ children }) => {
       const decodedToken = await user.getIdTokenResult();
       return decodedToken.claims;
     } catch (error) {
-      console.error('Error fetching custom claims:', error);
+      console.error("Error fetching custom claims:", error);
       return null;
     }
   };
-  
+
   const setFirebaseUser = async (user) => {
     try {
       setUser(user);
-    }
-    catch (error) {
-      console.error('Error setting Firebase user:', error);
+    } catch (error) {
+      console.error("Error setting Firebase user:", error);
     }
   };
-
 
   const googleSignIn = async () => {
     const provider = new GoogleAuthProvider();
@@ -136,25 +129,29 @@ export const AuthContextProvider = ({ children }) => {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
 
-  
       await createUser(user); // Ensure user is in the database
-       // Set Firebase user state
-       await setFirebaseUser(user);
+      // Set Firebase user state
+      await setFirebaseUser(user);
 
       return { success: true, message: "Google sign-in successful!" };
     } catch (error) {
-      console.error('Error during Google sign-in:', error);
-      return { success: false, message: `Google sign-in failed: ${error.message}` };
+      console.error("Error during Google sign-in:", error);
+      return {
+        success: false,
+        message: `Google sign-in failed: ${error.message}`,
+      };
     }
   };
 
-
   const emailandPasswordSignUp = async (email, password, name) => {
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
       const user = userCredential.user;
 
-  
       // Update the user's display name
       await updateProfile(user, { displayName: name });
 
@@ -169,7 +166,7 @@ export const AuthContextProvider = ({ children }) => {
 
       return { success: true, message: "Sign-up successful!" };
     } catch (error) {
-      console.error('Error during sign-up:', error);
+      console.error("Error during sign-up:", error);
       const errorCode = error.code;
 
       return { success: false, errorCode: errorCode };
@@ -178,7 +175,11 @@ export const AuthContextProvider = ({ children }) => {
 
   const emailandPasswordSignIn = async (email, password) => {
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
       const user = userCredential.user;
 
       // Set the user state
@@ -186,16 +187,17 @@ export const AuthContextProvider = ({ children }) => {
 
       return { success: true, errorCode: null, message: "Sign-in successful!" };
     } catch (error) {
-      console.error('Error during sign-in:', error);
-      return { success: false, errorCode: error.code, message: `Sign-in failed: ${error.message}` };
+      console.error("Error during sign-in:", error);
+      return {
+        success: false,
+        errorCode: error.code,
+        message: `Sign-in failed: ${error.message}`,
+      };
     }
   };
 
-
   const updateUserProfile = async (user, fullname, email, phoneNumber) => {
     try {
-
-     
       // Update display name
       await updateProfile(user, { displayName: fullname });
       console.log("Profile updated successfully");
@@ -212,7 +214,10 @@ export const AuthContextProvider = ({ children }) => {
       return { success: true, message: "User profile updated successfully!" };
     } catch (error) {
       console.error("Error during profile update:", error);
-      return { success: false, message: `Profile update failed: ${error.message}` };
+      return {
+        success: false,
+        message: `Profile update failed: ${error.message}`,
+      };
     }
   };
 
@@ -255,23 +260,25 @@ export const AuthContextProvider = ({ children }) => {
 
     try {
       const response = await fetchGraphQLData(query, variables);
-      console.log('GraphQL response [updateUser]:', response);
+      console.log("GraphQL response [updateUser]:", response);
       if (response.updateUser.data) {
-        return { success: true, message: "User updated in the database successfully!" };
+        return {
+          success: true,
+          message: "User updated in the database successfully!",
+        };
       }
       return { success: false, message: response.updateUser.message };
-    }
-    catch (error) {
-      console.error('GraphQL Error:', error);
-      return { success: false, message: `Failed to update user in database: ${error.message}` };
+    } catch (error) {
+      console.error("GraphQL Error:", error);
+      return {
+        success: false,
+        message: `Failed to update user in database: ${error.message}`,
+      };
     }
   };
 
-
-
   // Create a new user in the database
   const createUser = async (user) => {
-
     console.log("Create user: ", user);
     const query = `
       mutation CreateUser($newUser: NewUserInput!) {
@@ -298,11 +305,11 @@ export const AuthContextProvider = ({ children }) => {
     const variables = {
       newUser: {
         email: user.email,
-        displayName: user.displayName || '',
+        displayName: user.displayName || "",
         firebaseUID: user.uid,
-        photoURL: user.photoURL || '',
+        photoURL: user.photoURL || "",
         emailVerified: user.emailVerified,
-        phoneNumber: user.phoneNumber || '',
+        phoneNumber: user.phoneNumber || "",
         createdAt: new Date().toISOString(),
         creationTime: user.metadata.creationTime,
         lastLoginAt: user.metadata.lastSignInTime,
@@ -310,7 +317,6 @@ export const AuthContextProvider = ({ children }) => {
       },
     };
     try {
-
       const response = await fetchGraphQLData(query, variables);
 
       console.log("Response: ", response);
@@ -318,18 +324,25 @@ export const AuthContextProvider = ({ children }) => {
       if (response.createUser.message === "Email already exists") {
         return { success: false, message: "Email already exists" };
       } else if (response.createUser.data) {
-
         // Set db_id and role in claims
-        setClaims({ db_id: response.createUser.data.id, role: response.createUser.data.userRole });
+        setClaims({
+          db_id: response.createUser.data.id,
+          role: response.createUser.data.userRole,
+        });
 
-        return { success: true, message: "User created in the database successfully!" };
+        return {
+          success: true,
+          message: "User created in the database successfully!",
+        };
       } else {
         return { success: false, message: "Failed to create user in database" };
       }
-
     } catch (error) {
-      console.error('GraphQL Error:', error);
-      return { success: false, message: `Failed to create user in database: ${error.message}` };
+      console.error("GraphQL Error:", error);
+      return {
+        success: false,
+        message: `Failed to create user in database: ${error.message}`,
+      };
     }
   };
 
@@ -338,8 +351,11 @@ export const AuthContextProvider = ({ children }) => {
       await sendPasswordResetEmail(auth, email);
       return { success: true, message: "Password reset email sent!" };
     } catch (error) {
-      console.error('Error during password reset:', error);
-      return { success: false, message: `Password reset failed: ${error.message}` };
+      console.error("Error during password reset:", error);
+      return {
+        success: false,
+        message: `Password reset failed: ${error.message}`,
+      };
     }
   };
 
@@ -347,15 +363,27 @@ export const AuthContextProvider = ({ children }) => {
   const validateUserPassword = async (oldpassword) => {
     try {
       const email = auth.currentUser.email;
-      const userCredential = await signInWithEmailAndPassword(auth, email, oldpassword);
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        oldpassword
+      );
       const user = userCredential.user;
       if (user) {
         return { success: true, message: "Password validation successful!" };
       }
-      return { success: false, errorCode: null, message: "Password validation failed!" };
+      return {
+        success: false,
+        errorCode: null,
+        message: "Password validation failed!",
+      };
     } catch (error) {
-      console.error('Error during valiadting password:', error);
-      return { success: false, errorCode: error.code, message: `Password validation failed!: ${error.message}` };
+      console.error("Error during valiadting password:", error);
+      return {
+        success: false,
+        errorCode: error.code,
+        message: `Password validation failed!: ${error.message}`,
+      };
     }
   };
 
@@ -366,16 +394,19 @@ export const AuthContextProvider = ({ children }) => {
       await updatePassword(user, password);
       return { success: true, message: "Password updated successfully!" };
     } catch (error) {
-      console.error('Error during password update:', error);
-      return { success: false, message: `Password update failed: ${error.message}` };
+      console.error("Error during password update:", error);
+      return {
+        success: false,
+        message: `Password update failed: ${error.message}`,
+      };
     }
-  }
+  };
 
   const sendEmailValidation = async (user) => {
     console.log("Send email validation: ", user);
 
     const actionCodeSettings = {
-      url: `http://localhost:3000/user/login`,// Redirect URL after email verification
+      url: `http://localhost:3000/user/login`, // Redirect URL after email verification
       handleCodeInApp: true, // Set to true if you want to handle the verification in-app
     };
 
@@ -383,8 +414,11 @@ export const AuthContextProvider = ({ children }) => {
       await sendEmailVerification(user, actionCodeSettings);
       return { success: true, message: "Email validation sent!" };
     } catch (error) {
-      console.error('Error during email validation:', error);
-      return { success: false, message: `Email validation failed: ${error.message}` };
+      console.error("Error during email validation:", error);
+      return {
+        success: false,
+        message: `Email validation failed: ${error.message}`,
+      };
     }
   };
 
@@ -414,14 +448,26 @@ export const AuthContextProvider = ({ children }) => {
 
     try {
       const response = await fetchGraphQLData(query, variables);
-      console.log('GraphQL response [userByEmail]:', response);
+      console.log("GraphQL response [userByEmail]:", response);
       if (response.userByEmail.data) {
-        return { success: true, data: response.userByEmail.data, message: response.userByEmail.message };
+        return {
+          success: true,
+          data: response.userByEmail.data,
+          message: response.userByEmail.message,
+        };
       }
-      return { success: false, data: null, message: response.userByEmail.message };
+      return {
+        success: false,
+        data: null,
+        message: response.userByEmail.message,
+      };
     } catch (error) {
-      console.error('GraphQL Error:', error);
-      return { success: false, data: null, message: `Failed to fetch user: ${error.message}` };
+      console.error("GraphQL Error:", error);
+      return {
+        success: false,
+        data: null,
+        message: `Failed to fetch user: ${error.message}`,
+      };
     }
   };
 
@@ -429,14 +475,26 @@ export const AuthContextProvider = ({ children }) => {
   const getUserByUID = async (uid) => {
     try {
       const response = await fetchGraphQLData(QUERY_GET_USER_BY_UID, { uid });
-      console.log('GraphQL response [userByUID]:', response);
+      console.log("GraphQL response [userByUID]:", response);
       if (response.userByUID.data) {
-        return { success: true, data: response.userByUID.data, message: response.userByUID.message };
+        return {
+          success: true,
+          data: response.userByUID.data,
+          message: response.userByUID.message,
+        };
       }
-      return { success: false, data: null, message: response.userByUID.message };
+      return {
+        success: false,
+        data: null,
+        message: response.userByUID.message,
+      };
     } catch (error) {
-      console.error('GraphQL Error:', error);
-      return { success: false, data: null, message: `Failed to fetch user: ${error.message}` };
+      console.error("GraphQL Error:", error);
+      return {
+        success: false,
+        data: null,
+        message: `Failed to fetch user: ${error.message}`,
+      };
     }
   };
 
@@ -450,7 +508,7 @@ export const AuthContextProvider = ({ children }) => {
       setRedirectURL(null); // Clear redirectURL from state
 
       // Clear db_user from localStorage
-      localStorage.removeItem('db_user');
+      localStorage.removeItem("db_user");
 
       return { success: true, message: "Sign-out successful!" };
     } catch (error) {
@@ -468,10 +526,32 @@ export const AuthContextProvider = ({ children }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user,authLoading, dbUser,claims, fetchClaims,getCustomClaims, googleSignIn, emailandPasswordSignUp, emailandPasswordSignIn, logout, resetPassword, getUserByEmail, sendEmailValidation, updateUserProfile, validateUserPassword, setUserPassword, redirectURL, setRedirectURL }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        authLoading,
+        dbUser,
+        claims,
+        fetchClaims,
+        getCustomClaims,
+        googleSignIn,
+        emailandPasswordSignUp,
+        emailandPasswordSignIn,
+        logout,
+        resetPassword,
+        getUserByEmail,
+        sendEmailValidation,
+        updateUserProfile,
+        validateUserPassword,
+        setUserPassword,
+        redirectURL,
+        setRedirectURL,
+        getUserByUID,
+      }}
+    >
       {children}
     </AuthContext.Provider>
-  ); 
+  );
 };
 
 export const UserAuth = () => {

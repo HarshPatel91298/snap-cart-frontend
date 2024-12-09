@@ -13,9 +13,11 @@ export default function PrelineScript() {
     const loadPreline = async () => {
       await import("preline/preline");
 
-      if (window.HSStaticMethods) {
-        window.HSStaticMethods.autoInit();
-      }
+      document.addEventListener('DOMContentLoaded', () => {
+        if (window.HSStaticMethods && typeof window.HSStaticMethods.autoInit === 'function') {
+          window.HSStaticMethods.autoInit();
+        }
+      });
     };
 
     loadPreline();

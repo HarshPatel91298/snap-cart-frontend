@@ -1,9 +1,7 @@
 import "./globals.css";
 import "../styles/style.css";
+
 import { AuthContextProvider } from "../context/AuthContext";
-
-
-
 
 export const metadata = {
   title: "SnapCart",
@@ -16,14 +14,14 @@ export default function RootLayout({ children }) {
       <head>
         {/* Meta and other head elements here */}
         <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<script src="https://cdn.datatables.net/1.12.1/js/jquery.dataTables.min.js"></script>
-<link href="https://cdn.datatables.net/1.12.1/css/jquery.dataTables.min.css" rel="stylesheet"/>
-
+        <script src="https://cdn.datatables.net/1.12.1/js/jquery.dataTables.min.js"></script>
+        <link
+          href="https://cdn.datatables.net/1.12.1/css/jquery.dataTables.min.css"
+          rel="stylesheet"
+        />
       </head>
       <body>
-        <AuthContextProvider>
-          {children}
-        </AuthContextProvider>
+        <AuthContextProvider>{children}</AuthContextProvider>
 
         {/* External scripts */}
         <script src="https://cdn.jsdelivr.net/npm/preline@2.4.1/dist/preline.min.js"></script>
@@ -41,8 +39,6 @@ export default function RootLayout({ children }) {
         ></script>
 
         {/* Scripts for Datatable */}
-        
-       
       </body>
     </html>
   );
